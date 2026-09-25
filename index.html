@@ -2,438 +2,606 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Ethio-Global Logistics Operations Portal</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>BAFS TRADING - Transport Management System</title>
+  
+  <!-- Telegram WebApp SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
+  
   <!-- React & ReactDOM CDN -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-  <!-- Babel Compiler for JSX -->
+  
+  <!-- Babel Compiler for JSX in Browser -->
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    /* Custom scrollbar for mobile container */
+    ::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.6);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 4px;
+    }
+    /* Prevent pull-to-refresh on Telegram mobile webview */
+    body {
+      overscroll-behavior-y: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+  </style>
 </head>
-<body class="bg-slate-900 text-slate-100 font-sans antialiased">
+<body class="bg-slate-950 text-slate-100 font-sans antialiased min-h-screen">
 
   <div id="root"></div>
 
   <script type="text/babel">
-    const { useState, useEffect } = React;
+    const { useState, useEffect, useMemo } = React;
 
-    function LogisticsOperationsPortal() {
-      const [activeTab, setActiveTab] = useState('customs');
+    // --- INITIAL BAFS BULK DATA MODEL (Matching BAFS_bulk_template Excel) ---
+    const INITIAL_BAFS_ACCOUNTS = [
+      { id: 'BAFS-01', creditAccount: '1000010277427', amount: 10550.00, beneficiary: 'Abebe Bikila (Per-Diem)', status: 'Approved', type: 'Driver Per-Diem' },
+      { id: 'BAFS-02', creditAccount: '1000010277427', amount: 11545.69, beneficiary: 'Abebe Bikila (Fuel Expense)', status: 'Approved', type: 'Fuel Allowance' },
+      { id: 'BAFS-03', creditAccount: '1000010277427', amount: 45500.18, beneficiary: 'Abebe Bikila (Corridor Tariff)', status: 'Approved', type: 'Freight Tariff' },
+      { id: 'BAFS-04', creditAccount: '1000591321707', amount: 11000.00, beneficiary: 'Kebede Tassew (Allowance)', status: 'Approved', type: 'Driver Per-Diem' },
+      { id: 'BAFS-05', creditAccount: '1000597909512', amount: 24000.34, beneficiary: 'Almaz Ayana Logistics PLC', status: 'Pending', type: 'Subcontractor' },
+      { id: 'BAFS-06', creditAccount: '1000390460345', amount: 18000.24, beneficiary: 'Mojo Port Handling Agent', status: 'Approved', type: 'Port Handling' },
+      { id: 'BAFS-07', creditAccount: '1000390460345', amount: 14000.56, beneficiary: 'Dry Port Discharge Service', status: 'Approved', type: 'Port Handling' },
+      { id: 'BAFS-08', creditAccount: '1000417706171', amount: 10550.00, beneficiary: 'Tewodros Kassahun (Per-Diem)', status: 'Pending', type: 'Driver Per-Diem' },
+      { id: 'BAFS-09', creditAccount: '1000262015606', amount: 7358.88, beneficiary: 'Galafi Border Customs Fee', status: 'Approved', type: 'Customs Duty' },
+      { id: 'BAFS-10', creditAccount: '1000371841699', amount: 16000.75, beneficiary: 'Semera Freight Terminal', status: 'Approved', type: 'Transit Hub Fee' }
+    ];
+
+    // --- INITIAL TRANSPORT OPERATIONS DATA ---
+    const INITIAL_OPERATIONS = [
+      { id: 'BAFS-TR-901', driver: 'Mulugeta Tesfaye', plateNo: '3-ET-34211', origin: 'Port of Djibouti', destination: 'Mojo Dry Port', cargo: 'Fertilizer (30 MT)', status: 'IN_TRANSIT', checkpoint: 'Galafi Border', eta: 'Today, 18:00', totalTariff: 67595.87, creditAccount: '1000010277427' },
+      { id: 'BAFS-TR-902', driver: 'Dawit Getachew', plateNo: '3-ET-11892', origin: 'Mojo Dry Port', destination: 'Hawassa Industrial Park', cargo: 'Machinery Spare Parts', status: 'CUSTOMS_HOLD', checkpoint: 'Awash Checkpoint', eta: 'Tomorrow, 10:00', totalTariff: 24000.34, creditAccount: '1000597909512' },
+      { id: 'BAFS-TR-903', driver: 'Sintayehu Haile', plateNo: '3-ET-99012', origin: 'Semera Hub', destination: 'Addis Ababa (Kaliti)', cargo: 'Commercial Merchandise', status: 'DELIVERED', checkpoint: 'Kaliti Terminal', eta: 'Completed', totalTariff: 32000.80, creditAccount: '1000390460345' },
+      { id: 'BAFS-TR-904', driver: 'Yared Hagos', plateNo: '3-ET-55421', origin: 'Port of Djibouti', destination: 'Kombolcha Dry Port', cargo: 'Wheat Grain (35 MT)', status: 'IN_TRANSIT', checkpoint: 'Mille Station', eta: 'Tomorrow, 14:00', totalTariff: 11000.00, creditAccount: '1000591321707' }
+    ];
+
+    function BafsTelegramMiniApp() {
+      // Navigation Tab State
+      const [activeTab, setActiveTab] = useState('dashboard');
+      
+      // Data States with LocalStorage Persistence
+      const [accounts, setAccounts] = useState(() => {
+        const saved = localStorage.getItem('bafs_accounts');
+        return saved ? JSON.parse(saved) : INITIAL_BAFS_ACCOUNTS;
+      });
+
+      const [operations, setOperations] = useState(() => {
+        const saved = localStorage.getItem('bafs_operations');
+        return saved ? JSON.parse(saved) : INITIAL_OPERATIONS;
+      });
+
+      // Filter & Search States
       const [searchTerm, setSearchTerm] = useState('');
+      const [statusFilter, setStatusFilter] = useState('ALL');
+
+      // Modal & Form States
       const [isModalOpen, setIsModalOpen] = useState(false);
+      const [editingOp, setEditingOp] = useState(null);
+      const [formData, setFormData] = useState({
+        id: '',
+        driver: '',
+        plateNo: '',
+        origin: 'Port of Djibouti',
+        destination: 'Mojo Dry Port',
+        cargo: '',
+        status: 'IN_TRANSIT',
+        checkpoint: 'Galafi Border',
+        eta: 'Today, 18:00',
+        totalTariff: '',
+        creditAccount: '1000010277427'
+      });
 
-      // --- 1. CUSTOMS OPERATIONS DATA ---
-      const [customsOps, setCustomsOps] = useState([
-        { id: 'CUST-2026-001', declarationNo: 'DEC-88201', port: 'Galafi Border Post', declarant: 'Abebe Logistics', status: 'Customs Cleared', taxPaid: '145,000 ETB', dutyStatus: 'Paid', date: '2026-09-24' },
-        { id: 'CUST-2026-002', declarationNo: 'DEC-88205', port: 'Mojo Dry Port', declarant: 'Ethio-Transit Agent', status: 'Physical Inspection', taxPaid: '320,000 ETB', dutyStatus: 'Pending', date: '2026-09-25' },
-        { id: 'CUST-2026-003', declarationNo: 'DEC-88210', port: 'Dewele Checkpoint', declarant: 'Red Sea Cargo', status: 'Under Document Verification', taxPaid: '88,500 ETB', dutyStatus: 'In Review', date: '2026-09-25' }
-      ]);
+      // Telegram User Profile Context
+      const [tgUser, setTgUser] = useState(null);
 
-      // --- 2. TRAIN / ETHIO-DJIBOUTI RAILWAY DATA ---
-      const [trainOps, setTrainOps] = useState([
-        { id: 'EDR-TR-102', trainNo: 'Freight Train #04', origin: 'Nagad Station (Djibouti)', destination: 'Indode Freight Station', wagons: 42, cargoType: 'Containerized Goods', status: 'En Route', departure: '2026-09-25 06:00', eta: '2026-09-25 22:00' },
-        { id: 'EDR-TR-105', trainNo: 'Freight Train #09', origin: 'Indode Freight Station', destination: 'Dire Dawa Station', wagons: 30, cargoType: 'Bulk Grain / Wheat', status: 'Loading', departure: '2026-09-26 04:00', eta: '2026-09-26 15:00' }
-      ]);
+      // Save Data to LocalStorage
+      useEffect(() => {
+        localStorage.setItem('bafs_accounts', JSON.stringify(accounts));
+      }, [accounts]);
 
-      // --- 3. TRUCK TRANSPORT DATA ---
-      const [truckOps, setTruckOps] = useState([
-        { id: 'TRK-901', driver: 'Mulugeta Tesfaye', plate: '3-ET-34211', route: 'Port of Djibouti ➔ Mojo Dry Port', checkpoint: 'Awash Checkpoint', speed: '58 km/h', fuelLevel: '78%', cargoWeight: '32 Tons', status: 'In Transit' },
-        { id: 'TRK-902', driver: 'Sintayehu Haile', plate: '3-ET-99012', route: 'Semera ➔ Kaliti Terminal', checkpoint: 'Metehara Station', speed: '0 km/h (Rest)', fuelLevel: '45%', cargoWeight: '28 Tons', status: 'Driver Rest' }
-      ]);
+      useEffect(() => {
+        localStorage.setItem('bafs_operations', JSON.stringify(operations));
+      }, [operations]);
 
-      // --- 4. CARGO & DRY PORT HANDLING DATA ---
-      const [cargoOps, setCargoOps] = useState([
-        { id: 'CRG-501', containerNo: 'MSKU-9982310', size: '40ft HC', cargoDescription: 'Industrial Machinery', warehouse: 'Mojo Yard B', dischargeStatus: 'Discharged from Train', consignee: 'Midroc Industrial' },
-        { id: 'CRG-502', containerNo: 'TGHU-1120498', size: '20ft Standard', cargoDescription: 'Pharmaceutical Supplies', warehouse: 'Kality Cold Storage', dischargeStatus: 'Stored in Warehouse', consignee: 'Ministry of Health' }
-      ]);
+      // Initialize Telegram WebApp SDK
+      useEffect(() => {
+        if (window.Telegram && window.Telegram.WebApp) {
+          const tg = window.Telegram.WebApp;
+          tg.ready();
+          tg.expand(); // Expand Mini App to full height
+          
+          if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+            setTgUser(tg.initDataUnsafe.user);
+          }
 
-      // --- 5. BAFS BULK SETTLEMENT DATA ---
-      const [bulkPayments] = useState([
-        { creditAccount: '1000010277427', amount: 10550.00, recipient: 'Customs Transit Permit Clearance' },
-        { creditAccount: '1000010277427', amount: 11545.69, recipient: 'Ethio-Djibouti Railway Freight Fee' },
-        { creditAccount: '1000010277427', amount: 45500.18, recipient: 'Heavy Truck Driver Per-Diem & Fuel' },
-        { creditAccount: '1000591321707', amount: 11000.00, recipient: 'Mojo Dry Port Offloading Charges' }
-      ]);
+          // Native Telegram Main Button Trigger
+          tg.MainButton.setText("ADD NEW TRANSPORT JOB");
+          tg.MainButton.onClick(() => handleOpenAddModal());
+          tg.MainButton.show();
+        }
+      }, []);
 
-      // Form state for adding new operation logs
-      const [newCustoms, setNewCustoms] = useState({ declarationNo: '', port: 'Mojo Dry Port', declarant: '', taxPaid: '', status: 'In Review' });
-
+      // Refresh Lucide Icons after DOM updates
       useEffect(() => {
         if (window.lucide) {
           window.lucide.createIcons();
         }
-      }, [activeTab, customsOps, trainOps, truckOps, cargoOps, isModalOpen]);
+      }, [activeTab, operations, accounts, searchTerm, statusFilter, isModalOpen]);
 
-      const handleAddCustoms = (e) => {
-        e.preventDefault();
-        const entry = {
-          id: `CUST-2026-00${customsOps.length + 1}`,
-          declarationNo: newCustoms.declarationNo || 'DEC-NEW',
-          port: newCustoms.port,
-          declarant: newCustoms.declarant || 'General Agent',
-          status: newCustoms.status,
-          taxPaid: newCustoms.taxPaid ? `${newCustoms.taxPaid} ETB` : '0 ETB',
-          dutyStatus: 'Pending Verification',
-          date: new Date().toISOString().split('T')[0]
-        };
-        setCustomsOps([entry, ...customsOps]);
-        setIsModalOpen(false);
-        setNewCustoms({ declarationNo: '', port: 'Mojo Dry Port', declarant: '', taxPaid: '', status: 'In Review' });
+      // Trigger Telegram Haptic Feedback
+      const triggerHaptic = (type = 'impact') => {
+        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
+          if (type === 'impact') window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
+          if (type === 'success') window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+        }
       };
 
+      // Financial Metrics Calculation
+      const totalDisbursement = useMemo(() => {
+        return accounts.reduce((acc, item) => acc + Number(item.amount), 0);
+      }, [accounts]);
+
+      const pendingDisbursement = useMemo(() => {
+        return accounts
+          .filter(a => a.status === 'Pending')
+          .reduce((acc, item) => acc + Number(item.amount), 0);
+      }, [accounts]);
+
+      // CRUD Handlers
+      const handleOpenAddModal = () => {
+        triggerHaptic('impact');
+        setEditingOp(null);
+        setFormData({
+          id: `BAFS-TR-${Math.floor(100 + Math.random() * 900)}`,
+          driver: '',
+          plateNo: '',
+          origin: 'Port of Djibouti',
+          destination: 'Mojo Dry Port',
+          cargo: '',
+          status: 'IN_TRANSIT',
+          checkpoint: 'Galafi Border',
+          eta: 'Today, 20:00',
+          totalTariff: '15000',
+          creditAccount: '1000010277427'
+        });
+        setIsModalOpen(true);
+      };
+
+      const handleOpenEditModal = (op) => {
+        triggerHaptic('impact');
+        setEditingOp(op.id);
+        setFormData({ ...op });
+        setIsModalOpen(true);
+      };
+
+      const handleDeleteOp = (id) => {
+        triggerHaptic('impact');
+        if (confirm("Are you sure you want to delete this transport job?")) {
+          setOperations(operations.filter(item => item.id !== id));
+          triggerHaptic('success');
+        }
+      };
+
+      const handleSaveOperation = (e) => {
+        e.preventDefault();
+        triggerHaptic('success');
+
+        if (editingOp) {
+          setOperations(operations.map(item => item.id === editingOp ? { ...formData, totalTariff: parseFloat(formData.totalTariff) } : item));
+        } else {
+          setOperations([{ ...formData, totalTariff: parseFloat(formData.totalTariff) || 0 }, ...operations]);
+        }
+
+        setIsModalOpen(false);
+      };
+
+      // Search & Filtered Operations
+      const filteredOperations = operations.filter(op => {
+        const matchesSearch = 
+          op.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          op.driver.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          op.plateNo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          op.cargo.toLowerCase().includes(searchTerm.toLowerCase());
+        
+        const matchesStatus = statusFilter === 'ALL' || op.status === statusFilter;
+        return matchesSearch && matchesStatus;
+      });
+
       return (
-        <div className="min-h-screen bg-slate-900 text-slate-100 font-sans flex flex-col">
-          {/* Main Navigation Header */}
-          <header className="bg-slate-800 border-b border-slate-700 px-6 py-4 flex flex-wrap items-center justify-between gap-4">
+        <div className="flex flex-col min-h-screen bg-slate-950 text-slate-100 max-w-md mx-auto relative pb-20 border-x border-slate-800 shadow-2xl">
+          
+          {/* TOP HEADER */}
+          <header className="bg-slate-900/90 backdrop-blur-md sticky top-0 z-30 border-b border-slate-800 p-4 flex justify-between items-center">
             <div className="flex items-center space-x-3">
-              <div className="bg-blue-600 p-2.5 rounded-xl shadow-lg shadow-blue-600/30">
-                <i data-lucide="layers" class="h-6 w-6 text-white"></i>
+              <div className="bg-blue-600 p-2 rounded-xl shadow-lg shadow-blue-600/30">
+                <i data-lucide="truck" class="h-5 w-5 text-white"></i>
               </div>
               <div>
-                <h1 className="text-xl font-bold tracking-wide">Ethiopian Multimodal Logistics Portal</h1>
-                <p className="text-xs text-slate-400">Customs • Train Freight • Truck Operations • Dry Port & Cargo Management</p>
+                <h1 className="text-base font-bold tracking-tight text-white flex items-center gap-1.5">
+                  BAFS TRADING
+                  <span className="text-[10px] bg-blue-500/20 text-blue-400 font-mono px-1.5 py-0.5 rounded border border-blue-500/30">TMS</span>
+                </h1>
+                <p className="text-[11px] text-slate-400">Ethiopian Transport Management</p>
               </div>
             </div>
 
-            <div className="flex items-center space-x-3">
-              <button 
-                onClick={() => setIsModalOpen(true)}
-                className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition shadow-lg shadow-emerald-600/20"
-              >
-                <i data-lucide="plus-circle" class="h-4 w-4"></i>
-                <span>Log New Operation</span>
-              </button>
+            <div className="text-right">
+              <div className="text-xs font-semibold text-slate-200">
+                {tgUser ? `${tgUser.first_name}` : 'Operator'}
+              </div>
+              <div className="text-[10px] text-emerald-400 font-mono flex items-center justify-end gap-1">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                Telegram WebApp
+              </div>
             </div>
           </header>
 
-          <div className="flex-1 flex flex-col md:flex-row">
-            {/* Sidebar Navigation */}
-            <aside className="w-full md:w-64 bg-slate-800/50 border-r border-slate-700 p-4 space-y-2">
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider px-3 mb-2">Operations Modules</p>
-              
-              <button 
-                onClick={() => setActiveTab('customs')}
-                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition ${activeTab === 'customs' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'}`}
-              >
-                <i data-lucide="shield-check" class="h-4 w-4"></i>
-                <span>Customs & Clearance</span>
-              </button>
+          {/* MAIN CONTENT AREA BASED ON TAB */}
+          <main className="flex-1 p-4 space-y-5">
 
-              <button 
-                onClick={() => setActiveTab('train')}
-                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition ${activeTab === 'train' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'}`}
-              >
-                <i data-lucide="train" class="h-4 w-4"></i>
-                <span>Train / Railway (EDR)</span>
-              </button>
+            {/* TAB 1: DASHBOARD OVERVIEW */}
+            {activeTab === 'dashboard' && (
+              <div className="space-y-4">
+                {/* Metrics Cards */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-slate-900 border border-slate-800 p-3.5 rounded-2xl">
+                    <div className="flex justify-between items-center text-slate-400 mb-1">
+                      <span className="text-xs font-medium">Active Fleet</span>
+                      <i data-lucide="truck" class="h-4 w-4 text-blue-400"></i>
+                    </div>
+                    <div className="text-xl font-bold text-white font-mono">
+                      {operations.filter(o => o.status === 'IN_TRANSIT').length} Units
+                    </div>
+                    <p className="text-[10px] text-emerald-400 mt-1">Djibouti Corridor</p>
+                  </div>
 
-              <button 
-                onClick={() => setActiveTab('truck')}
-                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition ${activeTab === 'truck' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'}`}
-              >
-                <i data-lucide="truck" class="h-4 w-4"></i>
-                <span>Truck Fleet Operations</span>
-              </button>
+                  <div className="bg-slate-900 border border-slate-800 p-3.5 rounded-2xl">
+                    <div className="flex justify-between items-center text-slate-400 mb-1">
+                      <span className="text-xs font-medium">BAFS Budget</span>
+                      <i data-lucide="credit-card" class="h-4 w-4 text-emerald-400"></i>
+                    </div>
+                    <div className="text-lg font-bold text-emerald-400 font-mono">
+                      {totalDisbursement.toLocaleString('en-US', { maximumFractionDigits: 0 })} ETB
+                    </div>
+                    <p className="text-[10px] text-slate-400 mt-1">10 Accounts Queued</p>
+                  </div>
+                </div>
 
-              <button 
-                onClick={() => setActiveTab('cargo')}
-                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition ${activeTab === 'cargo' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'}`}
-              >
-                <i data-lucide="package" class="h-4 w-4"></i>
-                <span>Cargo & Dry Port Handling</span>
-              </button>
+                {/* Operations Quick Status */}
+                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
+                  <div className="flex justify-between items-center">
+                    <h2 className="text-sm font-bold text-white flex items-center gap-2">
+                      <i data-lucide="activity" class="h-4 w-4 text-blue-400"></i>
+                      Corridor Operational Status
+                    </h2>
+                    <button 
+                      onClick={() => setActiveTab('operations')} 
+                      className="text-xs text-blue-400 font-semibold flex items-center gap-1"
+                    >
+                      View All
+                      <i data-lucide="chevron-right" class="h-3 w-3"></i>
+                    </button>
+                  </div>
 
-              <button 
-                onClick={() => setActiveTab('finance')}
-                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition ${activeTab === 'finance' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'}`}
-              >
-                <i data-lucide="credit-card" class="h-4 w-4"></i>
-                <span>BAFS Settlement Sheets</span>
-              </button>
-            </aside>
+                  <div className="space-y-2">
+                    {operations.slice(0, 3).map(op => (
+                      <div key={op.id} className="bg-slate-950 border border-slate-800/80 p-3 rounded-xl flex justify-between items-center">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-blue-400 font-mono">{op.id}</span>
+                            <span className="text-xs font-medium text-white">{op.driver}</span>
+                          </div>
+                          <p className="text-[11px] text-slate-400 mt-0.5">{op.origin} ➔ {op.destination}</p>
+                        </div>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                          op.status === 'IN_TRANSIT' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                          op.status === 'CUSTOMS_HOLD' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
+                          'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                        }`}>
+                          {op.status.replace('_', ' ')}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
 
-            {/* Content Area */}
-            <main className="flex-1 p-6 space-y-6 overflow-y-auto">
+                {/* Quick Add Banner */}
+                <div className="bg-gradient-to-r from-blue-900/40 to-slate-900 border border-blue-800/50 p-4 rounded-2xl flex justify-between items-center">
+                  <div>
+                    <h3 className="text-sm font-bold text-white">Create New Waybill</h3>
+                    <p className="text-xs text-slate-400">Dispatch heavy trucks on corridor</p>
+                  </div>
+                  <button 
+                    onClick={handleOpenAddModal}
+                    className="bg-blue-600 hover:bg-blue-500 text-white p-2.5 rounded-xl text-xs font-bold shadow-lg shadow-blue-600/30 flex items-center gap-1.5"
+                  >
+                    <i data-lucide="plus" class="h-4 w-4"></i>
+                    Dispatch
+                  </button>
+                </div>
+              </div>
+            )}
 
-              {/* MODULE 1: CUSTOMS OPERATIONS */}
-              {activeTab === 'customs' && (
-                <div className="space-y-6">
-                  <div className="flex justify-between items-center bg-slate-800 p-4 rounded-xl border border-slate-700">
-                    <div>
-                      <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                        <i data-lucide="shield-check" class="text-blue-400 h-5 w-5"></i>
-                        Customs Declaration & Transit Clearances
-                      </h2>
-                      <p className="text-xs text-slate-400">Tracking customs entries at Galafi, Dewele, Mojo, and Kaliti checkpoints.</p>
+            {/* TAB 2: TRANSPORT OPERATIONS (FULL CRUD) */}
+            {activeTab === 'operations' && (
+              <div className="space-y-4">
+                {/* Search & Filter Header */}
+                <div className="space-y-2">
+                  <div className="relative">
+                    <input 
+                      type="text" 
+                      placeholder="Search Driver, Plate, ID, Cargo..."
+                      value={searchTerm}
+                      onChange={e => setSearchTerm(e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
+                    />
+                    <div className="absolute left-3 top-2.5 text-slate-500">
+                      <i data-lucide="search" class="h-4 w-4"></i>
                     </div>
                   </div>
 
-                  <div className="bg-slate-800 border border-slate-700 rounded-xl overflow-hidden">
-                    <table className="w-full text-left text-sm text-slate-300">
-                      <thead className="bg-slate-900/60 text-slate-400 uppercase text-xs">
-                        <tr>
-                          <th className="p-3">Ref ID</th>
-                          <th className="p-3">Declaration #</th>
-                          <th className="p-3">Customs Port</th>
-                          <th className="p-3">Declarant Agent</th>
-                          <th className="p-3">Tax / Duty Amount</th>
-                          <th className="p-3">Clearance Status</th>
-                          <th className="p-3">Date</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-700 font-mono">
-                        {customsOps.map(item => (
-                          <tr key={item.id} className="hover:bg-slate-700/30 transition">
-                            <td className="p-3 text-blue-400">{item.id}</td>
-                            <td className="p-3 font-semibold text-white">{item.declarationNo}</td>
-                            <td className="p-3 font-sans text-slate-300">{item.port}</td>
-                            <td className="p-3 font-sans text-slate-300">{item.declarant}</td>
-                            <td className="p-3 text-emerald-400 font-semibold">{item.taxPaid}</td>
-                            <td className="p-3 font-sans">
-                              <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                                {item.status}
-                              </span>
-                            </td>
-                            <td className="p-3 text-xs text-slate-400">{item.date}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                  {/* Status Chips */}
+                  <div className="flex gap-2 overflow-x-auto pb-1 text-[11px] font-medium">
+                    {['ALL', 'IN_TRANSIT', 'CUSTOMS_HOLD', 'DELIVERED'].map(st => (
+                      <button
+                        key={st}
+                        onClick={() => { triggerHaptic(); setStatusFilter(st); }}
+                        className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition border ${
+                          statusFilter === st 
+                            ? 'bg-blue-600 text-white border-blue-500' 
+                            : 'bg-slate-900 text-slate-400 border-slate-800'
+                        }`}
+                      >
+                        {st.replace('_', ' ')}
+                      </button>
+                    ))}
                   </div>
                 </div>
-              )}
 
-              {/* MODULE 2: TRAIN TRANSPORT */}
-              {activeTab === 'train' && (
-                <div className="space-y-6">
-                  <div className="bg-slate-800 p-4 rounded-xl border border-slate-700">
-                    <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                      <i data-lucide="train" class="text-blue-400 h-5 w-5"></i>
-                      Ethio-Djibouti Railway (EDR) Freight Operations
-                    </h2>
-                    <p className="text-xs text-slate-400">Train schedules, wagon counts, and terminal departures between Nagad and Indode.</p>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {trainOps.map(train => (
-                      <div key={train.id} className="bg-slate-800 border border-slate-700 rounded-xl p-5 space-y-3">
-                        <div className="flex justify-between items-center">
-                          <span className="text-xs font-mono text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded">{train.id}</span>
-                          <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                            {train.status}
+                {/* Operations List */}
+                <div className="space-y-3">
+                  {filteredOperations.length === 0 ? (
+                    <div className="text-center py-8 text-slate-500 text-xs">
+                      No transport jobs found.
+                    </div>
+                  ) : (
+                    filteredOperations.map(op => (
+                      <div key={op.id} className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <span className="text-xs font-mono font-bold text-blue-400">{op.id}</span>
+                            <h3 className="text-sm font-bold text-white mt-0.5">{op.driver}</h3>
+                            <p className="text-[11px] text-slate-400 font-mono">{op.plateNo}</p>
+                          </div>
+                          <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${
+                            op.status === 'IN_TRANSIT' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                            op.status === 'CUSTOMS_HOLD' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
+                            'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                          }`}>
+                            {op.status.replace('_', ' ')}
                           </span>
                         </div>
-                        <h3 className="text-base font-bold text-white">{train.trainNo}</h3>
-                        <p className="text-xs text-slate-300 font-medium">Route: {train.origin} ➔ {train.destination}</p>
-                        <div className="grid grid-cols-2 gap-2 text-xs text-slate-400 bg-slate-900/50 p-3 rounded-lg font-mono">
-                          <div>Wagons Attached: <span className="text-white">{train.wagons} Units</span></div>
-                          <div>Cargo Type: <span className="text-white">{train.cargoType}</span></div>
-                          <div>Departure: <span className="text-white">{train.departure}</span></div>
-                          <div>Estimated Arrival: <span className="text-white">{train.eta}</span></div>
+
+                        <div className="bg-slate-950 p-2.5 rounded-xl border border-slate-800/80 text-xs space-y-1 font-mono">
+                          <div className="flex justify-between text-slate-300">
+                            <span>Route:</span>
+                            <span className="text-white">{op.origin} ➔ {op.destination}</span>
+                          </div>
+                          <div className="flex justify-between text-slate-300">
+                            <span>Checkpoint:</span>
+                            <span className="text-amber-400">{op.checkpoint}</span>
+                          </div>
+                          <div className="flex justify-between text-slate-300">
+                            <span>Cargo:</span>
+                            <span className="text-slate-200">{op.cargo}</span>
+                          </div>
+                        </div>
+
+                        <div className="flex justify-between items-center pt-1">
+                          <div className="text-xs">
+                            <span className="text-slate-500 text-[10px] block">CBE Account</span>
+                            <span className="font-mono text-emerald-400 text-xs">{op.creditAccount}</span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <button 
+                              onClick={() => handleOpenEditModal(op)}
+                              className="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-300"
+                            >
+                              <i data-lucide="edit-3" class="h-3.5 w-3.5"></i>
+                            </button>
+                            <button 
+                              onClick={() => handleDeleteOp(op.id)}
+                              className="p-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-lg"
+                            >
+                              <i data-lucide="trash-2" class="h-3.5 w-3.5"></i>
+                            </button>
+                          </div>
                         </div>
                       </div>
-                    ))}
-                  </div>
+                    ))
+                  )}
                 </div>
-              )}
+              </div>
+            )}
 
-              {/* MODULE 3: TRUCK TRANSPORT */}
-              {activeTab === 'truck' && (
-                <div className="space-y-6">
-                  <div className="bg-slate-800 p-4 rounded-xl border border-slate-700">
-                    <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                      <i data-lucide="truck" class="text-blue-400 h-5 w-5"></i>
-                      Heavy Truck Dispatch & Driver Telematics
-                    </h2>
-                    <p className="text-xs text-slate-400">Road transportation tracking along Ethiopian highway corridors.</p>
-                  </div>
-
-                  <div className="bg-slate-800 border border-slate-700 rounded-xl overflow-hidden">
-                    <table className="w-full text-left text-sm text-slate-300">
-                      <thead className="bg-slate-900/60 text-slate-400 uppercase text-xs">
-                        <tr>
-                          <th className="p-3">Truck ID</th>
-                          <th className="p-3">Driver Name / Plate</th>
-                          <th className="p-3">Corridor Route</th>
-                          <th className="p-3">Live Location</th>
-                          <th className="p-3">Cargo Load</th>
-                          <th className="p-3">Fuel Status</th>
-                          <th className="p-3">Status</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-700">
-                        {truckOps.map(trk => (
-                          <tr key={trk.id} className="hover:bg-slate-700/30 transition">
-                            <td className="p-3 font-mono text-blue-400">{trk.id}</td>
-                            <td className="p-3">
-                              <div className="font-semibold text-white">{trk.driver}</div>
-                              <div className="text-xs font-mono text-slate-400">{trk.plate}</div>
-                            </td>
-                            <td className="p-3 text-xs">{trk.route}</td>
-                            <td className="p-3 text-amber-300 font-medium">{trk.checkpoint}</td>
-                            <td className="p-3 font-mono">{trk.cargoWeight}</td>
-                            <td className="p-3 font-mono text-emerald-400">{trk.fuelLevel}</td>
-                            <td className="p-3">
-                              <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                                {trk.status}
-                              </span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+            {/* TAB 3: BAFS ACCOUNTS & BULK SETTLEMENTS */}
+            {activeTab === 'accounts' && (
+              <div className="space-y-4">
+                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+                  <h2 className="text-sm font-bold text-white flex items-center gap-2 mb-1">
+                    <i data-lucide="file-spreadsheet" class="h-4 w-4 text-emerald-400"></i>
+                    BAFS Bulk Account Disbursements
+                  </h2>
+                  <p className="text-xs text-slate-400">
+                    Commercial Bank of Ethiopia (CBE) bulk payment ledger.
+                  </p>
                 </div>
-              )}
 
-              {/* MODULE 4: CARGO & DRY PORT HANDLING */}
-              {activeTab === 'cargo' && (
-                <div className="space-y-6">
-                  <div className="bg-slate-800 p-4 rounded-xl border border-slate-700">
-                    <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                      <i data-lucide="package" class="text-blue-400 h-5 w-5"></i>
-                      Container Cargo & Dry Port Storage Operations
-                    </h2>
-                    <p className="text-xs text-slate-400">Inventory tracking at Mojo, Gelan, and Kombolcha Dry Ports.</p>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {cargoOps.map(crg => (
-                      <div key={crg.id} className="bg-slate-800 border border-slate-700 rounded-xl p-5 space-y-2">
-                        <div className="flex justify-between items-center font-mono">
-                          <span className="text-blue-400 text-sm font-bold">{crg.containerNo} ({crg.size})</span>
-                          <span className="text-xs text-slate-400">{crg.id}</span>
-                        </div>
-                        <h3 className="text-base font-semibold text-white">{crg.cargoDescription}</h3>
-                        <div className="text-xs text-slate-300 space-y-1 bg-slate-900/50 p-3 rounded-lg">
-                          <div>Warehouse / Yard Location: <span className="text-amber-300 font-medium">{crg.warehouse}</span></div>
-                          <div>Handling Status: <span className="text-emerald-400 font-medium">{crg.dischargeStatus}</span></div>
-                          <div>Consignee: <span className="text-white font-medium">{crg.consignee}</span></div>
-                        </div>
+                <div className="space-y-2.5">
+                  {accounts.map(acc => (
+                    <div key={acc.id} className="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 flex justify-between items-center">
+                      <div>
+                        <div className="text-xs font-mono font-bold text-blue-400">{acc.creditAccount}</div>
+                        <div className="text-xs font-medium text-white mt-0.5">{acc.beneficiary}</div>
+                        <div className="text-[10px] text-slate-500">{acc.type}</div>
                       </div>
-                    ))}
-                  </div>
+                      <div className="text-right">
+                        <div className="text-xs font-bold text-emerald-400 font-mono">
+                          {acc.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })} ETB
+                        </div>
+                        <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full inline-block mt-1 ${
+                          acc.status === 'Approved' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'
+                        }`}>
+                          {acc.status}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              )}
+              </div>
+            )}
 
-              {/* MODULE 5: BAFS FINANCIAL SETTLEMENT */}
-              {activeTab === 'finance' && (
-                <div className="space-y-6">
-                  <div className="bg-slate-800 p-4 rounded-xl border border-slate-700">
-                    <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                      <i data-lucide="credit-card" class="text-emerald-400 h-5 w-5"></i>
-                      BAFS Operational Cost Settlements
-                    </h2>
-                    <p className="text-xs text-slate-400">Operational payouts for customs fees, train freight, truck drivers, and dry port handling.</p>
-                  </div>
+          </main>
 
-                  <div className="bg-slate-800 border border-slate-700 rounded-xl overflow-hidden">
-                    <table className="w-full text-left text-sm text-slate-300">
-                      <thead className="bg-slate-900/60 text-slate-400 uppercase text-xs">
-                        <tr>
-                          <th className="p-3">#</th>
-                          <th className="p-3">Credit Account (CBE / Bank)</th>
-                          <th className="p-3">Operational Disbursement Purpose</th>
-                          <th className="p-3 text-right">Amount (ETB)</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-700 font-mono">
-                        {bulkPayments.map((item, idx) => (
-                          <tr key={idx} className="hover:bg-slate-700/30 transition">
-                            <td className="p-3 text-slate-500">{idx + 1}</td>
-                            <td className="p-3 text-blue-300">{item.creditAccount}</td>
-                            <td className="p-3 font-sans text-slate-200">{item.recipient}</td>
-                            <td className="p-3 text-right font-semibold text-emerald-400">
-                              {item.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })} ETB
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
+          {/* BOTTOM NAVIGATION BAR */}
+          <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-slate-900/95 backdrop-blur-md border-t border-slate-800 px-6 py-2.5 flex justify-between z-40">
+            <button 
+              onClick={() => { triggerHaptic(); setActiveTab('dashboard'); }}
+              className={`flex flex-col items-center gap-1 ${activeTab === 'dashboard' ? 'text-blue-500' : 'text-slate-500'}`}
+            >
+              <i data-lucide="layout-dashboard" class="h-5 w-5"></i>
+              <span className="text-[10px] font-semibold">Dashboard</span>
+            </button>
 
-            </main>
-          </div>
+            <button 
+              onClick={() => { triggerHaptic(); setActiveTab('operations'); }}
+              className={`flex flex-col items-center gap-1 ${activeTab === 'operations' ? 'text-blue-500' : 'text-slate-500'}`}
+            >
+              <i data-lucide="truck" class="h-5 w-5"></i>
+              <span className="text-[10px] font-semibold">Operations</span>
+            </button>
 
-          {/* MODAL TO ADD NEW LOG ENTRY */}
+            <button 
+              onClick={() => { triggerHaptic(); setActiveTab('accounts'); }}
+              className={`flex flex-col items-center gap-1 ${activeTab === 'accounts' ? 'text-blue-500' : 'text-slate-500'}`}
+            >
+              <i data-lucide="credit-card" class="h-5 w-5"></i>
+              <span className="text-[10px] font-semibold">Accounts</span>
+            </button>
+          </nav>
+
+          {/* ADD / EDIT TRANSPORT OPERATION MODAL */}
           {isModalOpen && (
-            <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
-              <div className="bg-slate-800 border border-slate-700 rounded-xl max-w-md w-full p-6 space-y-4 shadow-2xl">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-bold text-white">Log Customs Clearance Operation</h3>
-                  <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-white">✕</button>
+            <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-end justify-center">
+              <div className="bg-slate-900 border-t border-slate-800 rounded-t-3xl max-w-md w-full p-5 space-y-4 max-h-[90vh] overflow-y-auto">
+                <div className="flex justify-between items-center border-b border-slate-800 pb-3">
+                  <h3 className="text-sm font-bold text-white">
+                    {editingOp ? 'Edit Transport Job' : 'Dispatch New Transport'}
+                  </h3>
+                  <button 
+                    onClick={() => setIsModalOpen(false)}
+                    className="p-1 bg-slate-800 rounded-full text-slate-400"
+                  >
+                    <i data-lucide="x" class="h-4 w-4"></i>
+                  </button>
                 </div>
 
-                <form onSubmit={handleAddCustoms} className="space-y-3">
+                <form onSubmit={handleSaveOperation} className="space-y-3">
                   <div>
-                    <label className="block text-xs text-slate-400 mb-1">Declaration Number</label>
+                    <label className="text-[11px] text-slate-400 block mb-1">Driver Name</label>
                     <input 
                       type="text" 
                       required
-                      placeholder="e.g. DEC-99012"
-                      value={newCustoms.declarationNo}
-                      onChange={e => setNewCustoms({...newCustoms, declarationNo: e.target.value})}
-                      className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm focus:outline-none focus:border-blue-500 text-white"
+                      placeholder="e.g. Abebe Bikila"
+                      value={formData.driver}
+                      onChange={e => setFormData({...formData, driver: e.target.value})}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-blue-500"
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-xs text-slate-400 mb-1">Customs Port / Checkpoint</label>
-                    <select 
-                      value={newCustoms.port}
-                      onChange={e => setNewCustoms({...newCustoms, port: e.target.value})}
-                      className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm focus:outline-none focus:border-blue-500 text-white"
-                    >
-                      <option value="Mojo Dry Port">Mojo Dry Port</option>
-                      <option value="Galafi Border Post">Galafi Border Post</option>
-                      <option value="Dewele Border Post">Dewele Border Post</option>
-                      <option value="Kaliti Terminal">Kaliti Terminal</option>
-                    </select>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-[11px] text-slate-400 block mb-1">Truck Plate No.</label>
+                      <input 
+                        type="text" 
+                        required
+                        placeholder="3-ET-XXXXX"
+                        value={formData.plateNo}
+                        onChange={e => setFormData({...formData, plateNo: e.target.value})}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] text-slate-400 block mb-1">Status</label>
+                      <select 
+                        value={formData.status}
+                        onChange={e => setFormData({...formData, status: e.target.value})}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-blue-500"
+                      >
+                        <option value="IN_TRANSIT">In Transit</option>
+                        <option value="CUSTOMS_HOLD">Customs Hold</option>
+                        <option value="DELIVERED">Delivered</option>
+                      </select>
+                    </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs text-slate-400 mb-1">Declarant / Agent Name</label>
+                    <label className="text-[11px] text-slate-400 block mb-1">Cargo Description</label>
                     <input 
                       type="text" 
-                      placeholder="e.g. Ethiopian Shipping Line Agent"
-                      value={newCustoms.declarant}
-                      onChange={e => setNewCustoms({...newCustoms, declarant: e.target.value})}
-                      className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm focus:outline-none focus:border-blue-500 text-white"
+                      required
+                      placeholder="e.g. Fertilizer (30 MT)"
+                      value={formData.cargo}
+                      onChange={e => setFormData({...formData, cargo: e.target.value})}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-blue-500"
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-xs text-slate-400 mb-1">Tax / Duty Amount (ETB)</label>
-                    <input 
-                      type="number" 
-                      placeholder="e.g. 50000"
-                      value={newCustoms.taxPaid}
-                      onChange={e => setNewCustoms({...newCustoms, taxPaid: e.target.value})}
-                      className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm focus:outline-none focus:border-blue-500 text-white"
-                    />
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-[11px] text-slate-400 block mb-1">Current Checkpoint</label>
+                      <input 
+                        type="text" 
+                        value={formData.checkpoint}
+                        onChange={e => setFormData({...formData, checkpoint: e.target.value})}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] text-slate-400 block mb-1">Associated CBE Account</label>
+                      <select 
+                        value={formData.creditAccount}
+                        onChange={e => setFormData({...formData, creditAccount: e.target.value})}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white font-mono focus:outline-none focus:border-blue-500"
+                      >
+                        {accounts.map(a => (
+                          <option key={a.id} value={a.creditAccount}>{a.creditAccount}</option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
 
-                  <div className="pt-2 flex justify-end gap-3">
-                    <button 
-                      type="button" 
-                      onClick={() => setIsModalOpen(false)}
-                      className="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-xs font-semibold text-slate-300"
-                    >
-                      Cancel
-                    </button>
-                    <button 
-                      type="submit" 
-                      className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-xs font-semibold text-white shadow-lg shadow-blue-600/30"
-                    >
-                      Save Log Entry
-                    </button>
-                  </div>
+                  <button 
+                    type="submit" 
+                    className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl text-xs shadow-lg shadow-blue-600/30 mt-2"
+                  >
+                    Save & Sync Job
+                  </button>
                 </form>
               </div>
             </div>
@@ -443,7 +611,7 @@
       );
     }
 
-    ReactDOM.createRoot(document.getElementById('root')).render(<LogisticsOperationsPortal />);
+    ReactDOM.createRoot(document.getElementById('root')).render(<BafsTelegramMiniApp />);
   </script>
 </body>
 </html>
