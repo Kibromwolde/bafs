@@ -1,188 +1,20 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BAFS TRADING TRANSPORT MANAGEMENT SYSTEM</title>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-</head>
-<body class="bg-gray-900 text-white min-h-screen">
-  <div id="root"></div>
-
-  <script type="text/babel">
-    const { useState, useEffect } = React;
-
-    const TRANSLATIONS = {
-      en: {
-        title: "BAFS TRADING PLC",
-        subtitle: "Transport & Credit Management System",
-        dash: "Dashboard",
-        credits: "Credit Accounts",
-        ops: "Operations",
-        totalAccounts: "Total Credit Accounts",
-        totalBalance: "Total Credit Amount",
-        inTransit: "Active Freight",
-        delivered: "Delivered Cargo",
-        recentOps: "Recent Transport Operations",
-        bankAccs: "BAFS Credit Accounts (Template Data)"
-      },
-      am: {
-        title: "ባፍስ ትሬዲንግ ኃ/የተ/የግ/ማህበር",
-        subtitle: "የትራንስፖርት እና የብድር አስተዳደር",
-        dash: "ዳሽቦርድ",
-        credits: "የብድር ሂሳቦች",
-        ops: "ስራዎች",
-        totalAccounts: "ጠቅላላ የብድር አካውንቶች",
-        totalBalance: "ጠቅላላ የብድር መጠን",
-        inTransit: "በመንገድ ላይ ያሉ",
-        delivered: "የደረሱ ጭነቶች",
-        recentOps: "የቅርብ ጊዜ የትራንስፖርት ስራዎች",
-        bankAccs: "የባፍስ ብድር አካውንቶች (ከኤክሴል የተጫነ)"
-      }
-    };
-
-    // Excel Bulk Template Data
-    const EXCEL_ACCOUNTS = [
-      { id: 1, acc: "1000010277427", amount: "10,550.00 ETB", rawAmt: 10550.00 },
-      { id: 2, acc: "1000010277427", amount: "11,545.69 ETB", rawAmt: 11545.69 },
-      { id: 3, acc: "1000010277427", amount: "45,500.18 ETB", rawAmt: 45500.18 },
-      { id: 4, acc: "1000591321707", amount: "11,000.00 ETB", rawAmt: 11000.00 },
-      { id: 5, acc: "1000597909512", amount: "24,000.34 ETB", rawAmt: 24000.34 },
-      { id: 6, acc: "1000390460345", amount: "18,000.24 ETB", rawAmt: 18000.24 },
-      { id: 7, acc: "1000390460345", amount: "14,000.56 ETB", rawAmt: 14000.56 },
-      { id: 8, acc: "1000417706171", amount: "10,550.00 ETB", rawAmt: 10550.00 },
-      { id: 9, acc: "1000262015606", amount: "7,358.88 ETB", rawAmt: 7358.88 },
-      { id: 10, acc: "1000371841699", amount: "16,000.75 ETB", rawAmt: 16000.75 }
-    ];
-
-    function App() {
-      const [lang, setLang] = useState('am');
-      const [activeTab, setActiveTab] = useState('dashboard');
-      const t = TRANSLATIONS[lang];
-
-      const totalPool = EXCEL_ACCOUNTS.reduce((sum, item) => sum + item.rawAmt, 0).toLocaleString('en-US', { minimumFractionDigits: 2 });
-
-      const operations = [
-        { id: "JOB-9012", driver: "Abebe Kebede", plate: "3-54321 ET", status: lang === 'am' ? 'በመጓጓዝ ላይ' : 'In Transit', color: 'bg-blue-500/20 text-blue-400', origin: "Djibouti Port", dest: "Modjo Dry Port" },
-        { id: "JOB-9013", driver: "Mulugeta Tadesse", plate: "3-88901 ET", status: lang === 'am' ? 'ጉምሩክ የተለቀቀ' : 'Customs Cleared', color: 'bg-purple-500/20 text-purple-400', origin: "Kality Customs", dest: "Galafi Border" },
-        { id: "JOB-9014", driver: "Bekele Alemu", plate: "3-12004 ET", status: lang === 'am' ? 'ደርሷል' : 'Delivered', color: 'bg-green-500/20 text-green-400', origin: "Semera", dest: "Addis Ababa" }
-      ];
-
-      useEffect(() => {
-        if (window.Telegram?.WebApp) {
-          window.Telegram.WebApp.ready();
-          window.Telegram.WebApp.expand();
-        }
-      }, []);
-
-      return (
-        <div class="max-w-md mx-auto min-h-screen pb-20 font-sans">
-          {/* Header */}
-          <div class="p-4 bg-gray-800 border-b border-gray-700 flex justify-between items-center sticky top-0 z-10 shadow-lg">
-            <div>
-              <h1 class="text-base font-bold text-amber-500 flex items-center gap-2">
-                🚛 {t.title}
-              </h1>
-              <p class="text-[11px] text-gray-400">{t.subtitle}</p>
-            </div>
-            <button 
-              onClick={() => setLang(lang === 'am' ? 'en' : 'am')}
-              class="px-2.5 py-1 bg-amber-500/10 text-amber-400 text-xs font-bold rounded-lg border border-amber-500/30 hover:bg-amber-500/20 transition"
-            >
-              {lang === 'am' ? '🇬🇧 EN' : '🇪🇹 አማርኛ'}
-            </button>
-          </div>
-
-          {/* Content */}
-          <div class="p-4 space-y-4">
-            {activeTab === 'dashboard' && (
-              <>
-                <div class="grid grid-cols-2 gap-3">
-                  <div class="bg-gray-800 p-3.5 rounded-xl border border-gray-700 text-left">
-                    <p class="text-[10px] text-gray-400 uppercase tracking-wider">{t.totalAccounts}</p>
-                    <p class="text-xl font-bold text-amber-400 mt-1">{EXCEL_ACCOUNTS.length} Accounts</p>
-                  </div>
-                  <div class="bg-gray-800 p-3.5 rounded-xl border border-gray-700 text-left">
-                    <p class="text-[10px] text-gray-400 uppercase tracking-wider">{t.totalBalance}</p>
-                    <p class="text-sm font-bold text-green-400 mt-1.5">{totalPool} ETB</p>
-                  </div>
-                </div>
-
-                <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
-                  <h3 class="text-xs font-bold text-gray-300 mb-3 uppercase tracking-wider">
-                    {t.recentOps}
-                  </h3>
-                  <div class="space-y-2">
-                    {operations.map(op => (
-                      <div key={op.id} class="p-3 bg-gray-900/80 rounded-lg text-xs flex justify-between items-center border border-gray-800">
-                        <div>
-                          <p class="font-bold text-white">{op.id} • <span class="text-amber-400">{op.driver}</span></p>
-                          <p class="text-gray-400 text-[11px] mt-0.5">{op.plate} ({op.origin} ➔ {op.dest})</p>
-                        </div>
-                        <span class={`px-2 py-1 rounded-md text-[10px] font-bold ${op.color}`}>
-                          {op.status}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </>
-            )}
-
-            {activeTab === 'accounts' && (
-              <div class="space-y-3">
-                <div class="flex justify-between items-center mb-1">
-                  <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wider">
-                    {t.bankAccs}
-                  </h3>
-                  <span class="text-[10px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded font-mono">
-                    Total: {totalPool} ETB
-                  </span>
-                </div>
-                {EXCEL_ACCOUNTS.map((acc, index) => (
-                  <div key={index} class="p-3 bg-gray-800 rounded-xl border border-gray-700 flex justify-between items-center">
-                    <div>
-                      <span class="text-[10px] font-semibold text-gray-400">
-                        Acc #{index + 1}
-                      </span>
-                      <p class="text-xs font-mono text-amber-300 font-bold mt-0.5">{acc.acc}</p>
-                    </div>
-                    <div class="text-right">
-                      <p class="text-sm font-bold text-white">{acc.amount}</p>
-                      <span class="text-[9px] px-2 py-0.5 bg-green-500/20 text-green-400 font-bold rounded-md inline-block mt-0.5">
-                        {lang === 'am' ? 'ተመዝግቧል' : 'Active'}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Navigation */}
-          <div class="fixed bottom-0 left-0 right-0 bg-gray-800/95 backdrop-blur border-t border-gray-700 max-w-md mx-auto flex justify-around p-2 text-xs">
-            <button 
-              onClick={() => setActiveTab('dashboard')}
-              class={`flex-1 py-2 flex flex-col items-center font-bold rounded-lg ${activeTab === 'dashboard' ? 'text-amber-400 bg-gray-700/50' : 'text-gray-400'}`}
-            >
-              📊 {t.dash}
-            </button>
-            <button 
-              onClick={() => setActiveTab('accounts')}
-              class={`flex-1 py-2 flex flex-col items-center font-bold rounded-lg ${activeTab === 'accounts' ? 'text-amber-400 bg-gray-700/50' : 'text-gray-400'}`}
-            >
-              💳 {t.credits}
-            </button>
-          </div>
+import React, { useState, useEffect, useMemo } from 'react';
+import { 
+  Truck, 
+  CreditCard, 
+  LayoutDashboard, 
+  PlusCircle, 
+  BookOpen, 
+  Search, 
+  Filter, 
+  CheckCircle, 
+…          >
+            <BookOpen size={18} />
+            <span className="text-[10px] mt-1">{t.navGuide}</span>
+          </button>
         </div>
-      );
-    }
+      </nav>
 
-    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
-  </script>
-</body>
-</html>
+    </div>
+  );
+}
