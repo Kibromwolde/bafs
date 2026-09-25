@@ -23,11 +23,12 @@
         dash: "Dashboard",
         credits: "Credit Accounts",
         ops: "Operations",
-        totalAccounts: "Total Accounts",
+        totalAccounts: "Total Credit Accounts",
+        totalBalance: "Total Credit Amount",
         inTransit: "Active Freight",
         delivered: "Delivered Cargo",
         recentOps: "Recent Transport Operations",
-        bankAccs: "BAFS Bank Accounts & Credit Allocation"
+        bankAccs: "BAFS Credit Accounts (Template Data)"
       },
       am: {
         title: "ባፍስ ትሬዲንግ ኃ/የተ/የግ/ማህበር",
@@ -35,24 +36,35 @@
         dash: "ዳሽቦርድ",
         credits: "የብድር ሂሳቦች",
         ops: "ስራዎች",
-        totalAccounts: "ጠቅላላ አካውንቶች",
+        totalAccounts: "ጠቅላላ የብድር አካውንቶች",
+        totalBalance: "ጠቅላላ የብድር መጠን",
         inTransit: "በመንገድ ላይ ያሉ",
         delivered: "የደረሱ ጭነቶች",
         recentOps: "የቅርብ ጊዜ የትራንስፖርት ስራዎች",
-        bankAccs: "የባፍስ ባንክ አካውንቶች እና የብድር ድልድል"
+        bankAccs: "የባፍስ ብድር አካውንቶች (ከኤክሴል የተጫነ)"
       }
     };
+
+    // Excel Bulk Template Data
+    const EXCEL_ACCOUNTS = [
+      { id: 1, acc: "1000010277427", amount: "10,550.00 ETB", rawAmt: 10550.00 },
+      { id: 2, acc: "1000010277427", amount: "11,545.69 ETB", rawAmt: 11545.69 },
+      { id: 3, acc: "1000010277427", amount: "45,500.18 ETB", rawAmt: 45500.18 },
+      { id: 4, acc: "1000591321707", amount: "11,000.00 ETB", rawAmt: 11000.00 },
+      { id: 5, acc: "1000597909512", amount: "24,000.34 ETB", rawAmt: 24000.34 },
+      { id: 6, acc: "1000390460345", amount: "18,000.24 ETB", rawAmt: 18000.24 },
+      { id: 7, acc: "1000390460345", amount: "14,000.56 ETB", rawAmt: 14000.56 },
+      { id: 8, acc: "1000417706171", amount: "10,550.00 ETB", rawAmt: 10550.00 },
+      { id: 9, acc: "1000262015606", amount: "7,358.88 ETB", rawAmt: 7358.88 },
+      { id: 10, acc: "1000371841699", amount: "16,000.75 ETB", rawAmt: 16000.75 }
+    ];
 
     function App() {
       const [lang, setLang] = useState('am');
       const [activeTab, setActiveTab] = useState('dashboard');
       const t = TRANSLATIONS[lang];
 
-      const accounts = [
-        { id: 1, acc: "1000010277427", amount: "10,550.00 ETB", bank: "CBE" },
-        { id: 2, acc: "1000591321707", amount: "11,000.00 ETB", bank: "CBE" },
-        { id: 3, acc: "1000597909512", amount: "24,000.34 ETB", bank: "CBE" }
-      ];
+      const totalPool = EXCEL_ACCOUNTS.reduce((sum, item) => sum + item.rawAmt, 0).toLocaleString('en-US', { minimumFractionDigits: 2 });
 
       const operations = [
         { id: "JOB-9012", driver: "Abebe Kebede", plate: "3-54321 ET", status: lang === 'am' ? 'በመጓጓዝ ላይ' : 'In Transit', color: 'bg-blue-500/20 text-blue-400', origin: "Djibouti Port", dest: "Modjo Dry Port" },
@@ -89,18 +101,14 @@
           <div class="p-4 space-y-4">
             {activeTab === 'dashboard' && (
               <>
-                <div class="grid grid-cols-3 gap-2">
-                  <div class="bg-gray-800 p-3 rounded-xl border border-gray-700 text-center">
-                    <p class="text-[10px] text-gray-400">{t.totalAccounts}</p>
-                    <p class="text-lg font-bold text-amber-400 mt-0.5">3</p>
+                <div class="grid grid-cols-2 gap-3">
+                  <div class="bg-gray-800 p-3.5 rounded-xl border border-gray-700 text-left">
+                    <p class="text-[10px] text-gray-400 uppercase tracking-wider">{t.totalAccounts}</p>
+                    <p class="text-xl font-bold text-amber-400 mt-1">{EXCEL_ACCOUNTS.length} Accounts</p>
                   </div>
-                  <div class="bg-gray-800 p-3 rounded-xl border border-gray-700 text-center">
-                    <p class="text-[10px] text-gray-400">{t.inTransit}</p>
-                    <p class="text-lg font-bold text-blue-400 mt-0.5">1</p>
-                  </div>
-                  <div class="bg-gray-800 p-3 rounded-xl border border-gray-700 text-center">
-                    <p class="text-[10px] text-gray-400">{t.delivered}</p>
-                    <p class="text-lg font-bold text-green-400 mt-0.5">1</p>
+                  <div class="bg-gray-800 p-3.5 rounded-xl border border-gray-700 text-left">
+                    <p class="text-[10px] text-gray-400 uppercase tracking-wider">{t.totalBalance}</p>
+                    <p class="text-sm font-bold text-green-400 mt-1.5">{totalPool} ETB</p>
                   </div>
                 </div>
 
@@ -127,21 +135,28 @@
 
             {activeTab === 'accounts' && (
               <div class="space-y-3">
-                <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wider">
-                  {t.bankAccs}
-                </h3>
-                {accounts.map(acc => (
-                  <div key={acc.id} class="p-3.5 bg-gray-800 rounded-xl border border-gray-700 flex justify-between items-center">
+                <div class="flex justify-between items-center mb-1">
+                  <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wider">
+                    {t.bankAccs}
+                  </h3>
+                  <span class="text-[10px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded font-mono">
+                    Total: {totalPool} ETB
+                  </span>
+                </div>
+                {EXCEL_ACCOUNTS.map((acc, index) => (
+                  <div key={index} class="p-3 bg-gray-800 rounded-xl border border-gray-700 flex justify-between items-center">
                     <div>
-                      <span class="text-[10px] font-semibold text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded">
-                        {acc.bank}
+                      <span class="text-[10px] font-semibold text-gray-400">
+                        Acc #{index + 1}
                       </span>
-                      <p class="text-xs font-mono text-gray-300 mt-1">{acc.acc}</p>
-                      <p class="text-base font-bold text-white mt-0.5">{acc.amount}</p>
+                      <p class="text-xs font-mono text-amber-300 font-bold mt-0.5">{acc.acc}</p>
                     </div>
-                    <span class="text-[11px] px-2.5 py-1 bg-green-500/20 text-green-400 font-bold rounded-lg">
-                      {lang === 'am' ? 'ንቁ' : 'Active'}
-                    </span>
+                    <div class="text-right">
+                      <p class="text-sm font-bold text-white">{acc.amount}</p>
+                      <span class="text-[9px] px-2 py-0.5 bg-green-500/20 text-green-400 font-bold rounded-md inline-block mt-0.5">
+                        {lang === 'am' ? 'ተመዝግቧል' : 'Active'}
+                      </span>
+                    </div>
                   </div>
                 ))}
               </div>
