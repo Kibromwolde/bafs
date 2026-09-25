@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BAFS TRADING TRANSPORT MANAGEMENT SYSTEM</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-gray-900 text-white min-h-screen">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    function App() {
+      const [lang, setLang] = useState('am');
+      const [activeTab, setActiveTab] = useState('dashboard');
+      const [searchQuery, setSearchQuery] = useState('');
+
+      const accounts = [
+        { id: 1, acc: "1000010277427", amount: "10,550.00 ETB", status: "Active" },
+        { id: 2, acc: "1000591321707", amount: "11,000.00 ETB", status: "Active" },
+        { id: 3, acc: "1000597909512", amount: "24,000.34 ETB", status: "Active" }
+      ];
+
+      const operations = [
+        { id: "JOB-9012", driver: "Abebe Kebede", plate: "3-54321 ET", status: "In Transit", origin: "Djibouti Port", dest: "Modjo Dry Port" },
+        { id: "JOB-9013", driver: "Mulugeta Tadesse", plate: "3-88901 ET", status: "Customs Cleared", origin: "Kality Customs", dest: "Galafi Border" },
+        { id: "JOB-9014", driver: "Bekele Alemu", plate: "3-12004 ET", status: "Delivered", origin: "Semera", dest: "Addis Ababa" }
+      ];
+
+      useEffect(() => {
+        if (window.Telegram?.WebApp) {
+          window.Telegram.WebApp.ready();
+          window.Telegram.WebApp.expand();
+        }
+      }, []);
+
+      return (
+        <div class="max-w-md mx-auto min-h-screen pb-16">
+          {/* Header */}
+          <div class="p-4 bg-gray-800 border-b border-gray-700 flex justify-between items-center sticky top-0 z-10">
+            <div>
+              <h1 class="text-lg font-bold text-amber-500 flex items-center gap-2">
+                🚛 BAFS TRADING
+              </h1>
+              <p class="text-xs text-gray-400">Transport Management System</p>
+            </div>
+            <button 
+              onClick={() => setLang(lang === 'am' ? 'en' : 'am')}
+              class="px-3 py-1 bg-gray-700 text-amber-400 text-xs font-bold rounded-lg border border-gray-600"
+            >
+              {lang === 'am' ? '🇬🇧 English' : '🇪🇹 አማርኛ'}
+            </button>
+          </div>
+
+          {/* Body Content */}
+          <div class="p-4">
+            {activeTab === 'dashboard' && (
+              <div class="space-y-4">
+                <div class="grid grid-cols-2 gap-3">
+                  <div class="bg-gray-800 p-3 rounded-xl border border-gray-700">
+                    <p class="text-xs text-gray-400">{lang === 'am' ? 'ጠቅላላ ክሬዲት' : 'Total Accounts'}</p>
+                    <p class="text-xl font-bold text-amber-400 mt-1">3 Accounts</p>
+                  </div>
+                  <div class="bg-gray-800 p-3 rounded-xl border border-gray-700">
+                    <p class="text-xs text-gray-400">{lang === 'am' ? 'በመንገድ ላይ ያሉ' : 'Active In Transit'}</p>
+                    <p class="text-xl font-bold text-blue-400 mt-1">1 Cargo</p>
+                  </div>
+                </div>
+
+                <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
+                  <h3 class="text-sm font-semibold text-gray-200 mb-3">
+                    {lang === 'am' ? 'ቅርብ ጊዜ የትራንስፖርት እንቅስቃሴዎች' : 'Recent Transport Operations'}
+                  </h3>
+                  <div class="space-y-2">
+                    {operations.map(op => (
+                      <div key={op.id} class="p-3 bg-gray-900/60 rounded-lg text-xs flex justify-between items-center">
+                        <div>
+                          <p class="font-bold text-white">{op.id} • {op.driver}</p>
+                          <p class="text-gray-400">{op.origin} ➔ {op.dest}</p>
+                        </div>
+                        <span class="px-2 py-1 rounded-full text-[10px] font-semibold bg-amber-500/20 text-amber-400">
+                          {op.status}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'accounts' && (
+              <div class="space-y-3">
+                <h3 class="text-sm font-semibold text-amber-400">
+                  {lang === 'am' ? 'የ BAFS ክሬዲት አካውንቶች' : 'BAFS Credit Accounts'}
+                </h3>
+                {accounts.map(acc => (
+                  <div key={acc.id} class="p-3 bg-gray-800 rounded-xl border border-gray-700 flex justify-between items-center">
+                    <div>
+                      <p class="text-xs font-mono text-gray-300">{acc.acc}</p>
+                      <p class="text-sm font-bold text-white mt-0.5">{acc.amount}</p>
+                    </div>
+                    <span class="text-xs px-2 py-0.5 bg-green-500/20 text-green-400 rounded-md">
+                      {acc.status}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Navigation Bar */}
+          <div class="fixed bottom-0 left-0 right-0 bg-gray-800 border-t border-gray-700 max-w-md mx-auto flex justify-around p-2 text-xs">
+            <button 
+              onClick={() => setActiveTab('dashboard')}
+              class={`flex flex-col items-center p-1 ${activeTab === 'dashboard' ? 'text-amber-400' : 'text-gray-400'}`}
+            >
+              📊 {lang === 'am' ? 'ዳሽቦርድ' : 'Dashboard'}
+            </button>
+            <button 
+              onClick={() => setActiveTab('accounts')}
+              class={`flex flex-col items-center p-1 ${activeTab === 'accounts' ? 'text-amber-400' : 'text-gray-400'}`}
+            >
+              💳 {lang === 'am' ? 'ክሬዲት' : 'Credit'}
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
