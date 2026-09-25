@@ -1,247 +1,301 @@
-import React, { useState } from 'react';
-import { 
-  Truck, 
-  MapPin, 
-  CreditCard, 
-  FileSpreadsheet, 
-  CheckCircle2, 
-  AlertTriangle, 
-  Clock, 
-  ArrowUpRight,
-  ShieldCheck,
-  Search,
-  Download
-} from 'lucide-react';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EthioTrans GTMS - Global Transport Management System</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- React & ReactDOM CDN -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <!-- Babel Compiler for JSX in Browser -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 font-sans antialiased">
 
-export default function EthioGlobalTMS() {
-  const [activeTab, setActiveTab] = useState('corridor');
-  const [bulkPayments, setBulkPayments] = useState([
-    { creditAccount: '1000010277427', amount: 10550.00, recipient: 'Abebe Bikila (Driver)', status: 'Verified' },
-    { creditAccount: '1000010277427', amount: 11545.69, recipient: 'Abebe Bikila (Per-Diem)', status: 'Verified' },
-    { creditAccount: '1000010277427', amount: 45500.18, recipient: 'Abebe Bikila (Fuel Top-up)', status: 'Verified' },
-    { creditAccount: '1000591321707', amount: 11000.00, recipient: 'Kebede Tassew (Allowance)', status: 'Verified' },
-    { creditAccount: '1000597909512', amount: 24000.34, recipient: 'Almaz Ayana Transport', status: 'Pending' },
-    { creditAccount: '1000390460345', amount: 18000.24, recipient: 'Mojo Logistics Partner', status: 'Verified' },
-  ]);
+  <div id="root"></div>
 
-  const shipments = [
-    { id: 'WB-2026-901', driver: 'Mulugeta Tesfaye', vehicle: '3-ET-34211', cargo: 'Fertilizer (30 Tons)', origin: 'Port of Djibouti', dest: 'Mojo Dry Port', status: 'In Transit', checkpoint: 'Galafi Border', eta: 'Today, 18:00 EAT' },
-    { id: 'WB-2026-902', driver: 'Dawit Getachew', vehicle: '3-ET-11892', cargo: 'Industrial Machinery', origin: 'Mojo Dry Port', dest: 'Hawassa Industrial Park', status: 'Customs Hold', checkpoint: 'Awash Checkpoint', eta: 'Tomorrow, 10:00 EAT' },
-    { id: 'WB-2026-903', driver: 'Sintayehu Haile', vehicle: '3-ET-99012', cargo: 'Commercial Goods', origin: 'Semera', dest: 'Addis Ababa (Kaliti)', status: 'On Schedule', checkpoint: 'Metehara', eta: 'Today, 21:30 EAT' }
-  ];
+  <script type="text/babel">
+    const { useState, useEffect } = React;
 
-  const totalDisbursement = bulkPayments.reduce((acc, curr) => acc + curr.amount, 0);
+    function EthioGlobalTMS() {
+      const [activeTab, setActiveTab] = useState('corridor');
+      const [searchTerm, setSearchTerm] = useState('');
 
-  return (
-    <div className="min-h-screen bg-slate-900 text-slate-100 font-sans flex flex-col">
-      {/* Top Header */}
-      <header className="bg-slate-800 border-b border-slate-700 px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <div className="bg-blue-600 p-2 rounded-lg">
-            <Truck className="h-6 w-6 text-white" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold tracking-wide">EthioTrans GTMS</h1>
-            <p className="text-xs text-slate-400">Global Transport Management • Horn of Africa Corridor</p>
-          </div>
-        </div>
-        <div className="flex items-center space-x-4">
-          <span className="bg-emerald-500/10 text-emerald-400 text-xs px-3 py-1.5 rounded-full font-mono border border-emerald-500/20 flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            CBE / Telebirr Host-to-Host Connected
-          </span>
-          <div className="text-right">
-            <p className="text-sm font-medium">Addis Ababa HQ</p>
-            <p className="text-xs text-slate-400">25 Meskerem 2019 EC</p>
-          </div>
-        </div>
-      </header>
+      // Sample dataset matching your BAFS bulk payment structure
+      const [bulkPayments] = useState([
+        { creditAccount: '1000010277427', amount: 10550.00, recipient: 'Abebe Bikila (Driver Allowance)', status: 'Verified' },
+        { creditAccount: '1000010277427', amount: 11545.69, recipient: 'Abebe Bikila (Per-Diem)', status: 'Verified' },
+        { creditAccount: '1000010277427', amount: 45500.18, recipient: 'Abebe Bikila (Fuel Top-up)', status: 'Verified' },
+        { creditAccount: '1000591321707', amount: 11000.00, recipient: 'Kebede Tassew (Per-Diem)', status: 'Verified' },
+        { creditAccount: '1000597909512', amount: 24000.34, recipient: 'Almaz Ayana Transport', status: 'Pending' },
+        { creditAccount: '1000390460345', amount: 18000.24, recipient: 'Mojo Logistics Partner', status: 'Verified' },
+        { creditAccount: '1000390460345', amount: 14000.56, recipient: 'Mojo Dry Port Handling', status: 'Verified' },
+        { creditAccount: '1000417706171', amount: 10550.00, recipient: 'Tewodros Kassahun (Per-Diem)', status: 'Verified' },
+        { creditAccount: '1000262015606', amount: 7358.88, recipient: 'Galafi Border Clearance Fee', status: 'Verified' },
+        { creditAccount: '1000371841699', amount: 16000.75, recipient: 'Semera Transit Station', status: 'Verified' }
+      ]);
 
-      {/* Main Container */}
-      <div className="flex-1 flex">
-        {/* Sidebar */}
-        <aside className="w-64 bg-slate-800/50 border-r border-slate-700 p-4 flex flex-col justify-between">
-          <nav className="space-y-1">
-            <button 
-              onClick={() => setActiveTab('corridor')}
-              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition ${activeTab === 'corridor' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'}`}
-            >
-              <MapPin className="h-4 w-4" />
-              <span>Djibouti Corridor</span>
-            </button>
-            <button 
-              onClick={() => setActiveTab('bulk-bafs')}
-              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition ${activeTab === 'bulk-bafs' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'}`}
-            >
-              <FileSpreadsheet className="h-4 w-4" />
-              <span>BAFS Bulk Payouts</span>
-            </button>
-            <button 
-              onClick={() => setActiveTab('fleet')}
-              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition ${activeTab === 'fleet' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'}`}
-            >
-              <Truck className="h-4 w-4" />
-              <span>Fleet Telematics</span>
-            </button>
-          </nav>
-          
-          <div className="bg-slate-800 p-3 rounded-lg border border-slate-700">
-            <div className="flex items-center space-x-2 text-xs text-amber-400 font-semibold mb-1">
-              <AlertTriangle className="h-4 w-4" />
-              <span>Galafi Border Queue</span>
-            </div>
-            <p className="text-xs text-slate-400">Average border clearance delay: 3.5 hrs. Customs server operating normally.</p>
-          </div>
-        </aside>
+      const [shipments] = useState([
+        { id: 'WB-2026-901', driver: 'Mulugeta Tesfaye', vehicle: '3-ET-34211', cargo: 'Fertilizer (30 Tons)', origin: 'Port of Djibouti', dest: 'Mojo Dry Port', status: 'In Transit', checkpoint: 'Galafi Border', eta: 'Today, 18:00 EAT' },
+        { id: 'WB-2026-902', driver: 'Dawit Getachew', vehicle: '3-ET-11892', cargo: 'Industrial Machinery', origin: 'Mojo Dry Port', dest: 'Hawassa Industrial Park', status: 'Customs Hold', checkpoint: 'Awash Checkpoint', eta: 'Tomorrow, 10:00 EAT' },
+        { id: 'WB-2026-903', driver: 'Sintayehu Haile', vehicle: '3-ET-99012', cargo: 'Commercial Goods', origin: 'Semera', dest: 'Addis Ababa (Kaliti)', status: 'On Schedule', checkpoint: 'Metehara', eta: 'Today, 21:30 EAT' },
+        { id: 'WB-2026-904', driver: 'Yared Hagos', vehicle: '3-ET-55421', cargo: 'Wheat Grain (35 Tons)', origin: 'Port of Djibouti', dest: 'Kombolcha Dry Port', status: 'In Transit', checkpoint: 'Mille', eta: 'Tomorrow, 14:00 EAT' }
+      ]);
 
-        {/* Dashboard Content */}
-        <main className="flex-1 p-6 space-y-6 overflow-y-auto">
-          {/* Top Metrics Bar */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="bg-slate-800 border border-slate-700 p-4 rounded-xl">
-              <p className="text-xs text-slate-400 font-medium">Active Transit Trucks</p>
-              <p className="text-2xl font-bold mt-1 text-white">142 Units</p>
-              <span className="text-xs text-emerald-400 mt-2 inline-block">89% on corridor route</span>
-            </div>
-            <div className="bg-slate-800 border border-slate-700 p-4 rounded-xl">
-              <p className="text-xs text-slate-400 font-medium">Cargo Volume (Tons)</p>
-              <p className="text-2xl font-bold mt-1 text-white">4,250 MT</p>
-              <span className="text-xs text-blue-400 mt-2 inline-block">Djibouti ➔ Mojo Corridor</span>
-            </div>
-            <div className="bg-slate-800 border border-slate-700 p-4 rounded-xl">
-              <p className="text-xs text-slate-400 font-medium">BAFS Pending Settlement</p>
-              <p className="text-2xl font-bold mt-1 text-amber-400">{totalDisbursement.toLocaleString('en-US', { minimumFractionDigits: 2 })} ETB</p>
-              <span className="text-xs text-slate-400 mt-2 inline-block">10 Disburse Items queued</span>
-            </div>
-            <div className="bg-slate-800 border border-slate-700 p-4 rounded-xl">
-              <p className="text-xs text-slate-400 font-medium">Customs Clearance Compliance</p>
-              <p className="text-2xl font-bold mt-1 text-emerald-400">98.4%</p>
-              <span className="text-xs text-emerald-400 mt-2 inline-block">Asycuda World Synced</span>
-            </div>
-          </div>
+      // Re-initialize Lucide icons on tab switch or search update
+      useEffect(() => {
+        if (window.lucide) {
+          window.lucide.createIcons();
+        }
+      }, [activeTab, searchTerm]);
 
-          {activeTab === 'corridor' && (
-            <div className="space-y-6">
-              <div className="bg-slate-800 border border-slate-700 rounded-xl p-5">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-lg font-semibold flex items-center gap-2">
-                    <MapPin className="text-blue-400 h-5 w-5" />
-                    Live Djibouti - Addis Ababa Corridor Monitor
-                  </h2>
-                  <div className="relative">
-                    <Search className="h-4 w-4 absolute left-3 top-2.5 text-slate-500" />
-                    <input 
-                      type="text" 
-                      placeholder="Search Waybill or Truck..." 
-                      className="bg-slate-900 border border-slate-700 rounded-lg pl-9 pr-4 py-1.5 text-sm focus:outline-none focus:border-blue-500 text-slate-200"
-                    />
-                  </div>
-                </div>
+      const totalDisbursement = bulkPayments.reduce((acc, curr) => acc + curr.amount, 0);
 
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-sm text-slate-300">
-                    <thead className="bg-slate-900/60 text-slate-400 uppercase text-xs">
-                      <tr>
-                        <th className="p-3">Waybill #</th>
-                        <th className="p-3">Driver / Plate</th>
-                        <th className="p-3">Cargo Description</th>
-                        <th className="p-3">Route Segment</th>
-                        <th className="p-3">Current Checkpoint</th>
-                        <th className="p-3">Status</th>
-                        <th className="p-3">ETA (Addis/Mojo)</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-700">
-                      {shipments.map((item) => (
-                        <tr key={item.id} className="hover:bg-slate-700/30 transition">
-                          <td className="p-3 font-mono font-medium text-blue-400">{item.id}</td>
-                          <td className="p-3">
-                            <div>{item.driver}</div>
-                            <div className="text-xs text-slate-500">{item.vehicle}</div>
-                          </td>
-                          <td className="p-3">{item.cargo}</td>
-                          <td className="p-3 text-xs">{item.origin} ➔ {item.dest}</td>
-                          <td className="p-3 font-medium text-amber-300">{item.checkpoint}</td>
-                          <td className="p-3">
-                            <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
-                              item.status === 'On Schedule' || item.status === 'In Transit' 
-                                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
-                                : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                            }`}>
-                              {item.status}
-                            </span>
-                          </td>
-                          <td className="p-3 text-xs text-slate-400">{item.eta}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+      const filteredShipments = shipments.filter(item => 
+        item.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.driver.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.vehicle.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.cargo.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+
+      return (
+        <div className="min-h-screen bg-slate-900 text-slate-100 font-sans flex flex-col">
+          {/* Header */}
+          <header className="bg-slate-800 border-b border-slate-700 px-6 py-4 flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center space-x-3">
+              <div className="bg-blue-600 p-2.5 rounded-xl shadow-lg shadow-blue-600/30">
+                <i data-lucide="truck" class="h-6 w-6 text-white"></i>
+              </div>
+              <div>
+                <h1 className="text-xl font-bold tracking-wide">EthioTrans GTMS</h1>
+                <p className="text-xs text-slate-400">Global Transport Management System • Horn of Africa Corridor</p>
               </div>
             </div>
-          )}
-
-          {activeTab === 'bulk-bafs' && (
-            <div className="space-y-6">
-              <div className="bg-slate-800 border border-slate-700 rounded-xl p-5">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-                  <div>
-                    <h2 className="text-lg font-semibold flex items-center gap-2">
-                      <CreditCard className="text-emerald-400 h-5 w-5" />
-                      BAFS Ethiopian Bank Bulk Payment Module
-                    </h2>
-                    <p className="text-xs text-slate-400 mt-1">
-                      Automated disbursement engine formatted for Commercial Bank of Ethiopia (CBE) bulk transfer files.
-                    </p>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <button className="bg-slate-700 hover:bg-slate-600 text-slate-200 px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition">
-                      <Download className="h-4 w-4" />
-                      Export .XLSX Template
-                    </button>
-                    <button className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition shadow-lg shadow-blue-600/30">
-                      <ShieldCheck className="h-4 w-4" />
-                      Execute CBE Batch Transfer
-                    </button>
-                  </div>
-                </div>
-
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-sm text-slate-300">
-                    <thead className="bg-slate-900/60 text-slate-400 uppercase text-xs">
-                      <tr>
-                        <th className="p-3">Row</th>
-                        <th className="p-3">Credit Account (CBE / Bank)</th>
-                        <th className="p-3">Beneficiary Name / Description</th>
-                        <th className="p-3 text-right">Amount (ETB)</th>
-                        <th className="p-3 text-center">Validation Status</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-700">
-                      {bulkPayments.map((pay, idx) => (
-                        <tr key={idx} className="hover:bg-slate-700/30 transition font-mono">
-                          <td className="p-3 text-slate-500 text-xs">{idx + 1}</td>
-                          <td className="p-3 text-blue-300">{pay.creditAccount}</td>
-                          <td className="p-3 text-slate-200 font-sans">{pay.recipient}</td>
-                          <td className="p-3 text-right font-semibold text-emerald-400">
-                            {pay.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })} ETB
-                          </td>
-                          <td className="p-3 text-center font-sans">
-                            <span className="inline-flex items-center gap-1 text-xs text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
-                              <CheckCircle2 className="h-3 w-3" />
-                              {pay.status}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+            <div className="flex items-center space-x-4">
+              <span className="bg-emerald-500/10 text-emerald-400 text-xs px-3 py-1.5 rounded-full font-mono border border-emerald-500/20 flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                CBE / Telebirr Host-to-Host Connected
+              </span>
+              <div className="text-right hidden sm:block">
+                <p className="text-sm font-medium">Addis Ababa HQ</p>
+                <p className="text-xs text-slate-400">Ethiopian Work System Integrated</p>
               </div>
             </div>
-          )}
-        </main>
-      </div>
-    </div>
-  );
-}
+          </header>
+
+          {/* Main Layout */}
+          <div className="flex-1 flex flex-col md:flex-row">
+            {/* Sidebar Navigation */}
+            <aside className="w-full md:w-64 bg-slate-800/50 border-r border-slate-700 p-4 flex flex-col justify-between space-y-4">
+              <nav className="space-y-1">
+                <button 
+                  onClick={() => setActiveTab('corridor')}
+                  className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition ${activeTab === 'corridor' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'}`}
+                >
+                  <i data-lucide="map-pin" class="h-4 w-4"></i>
+                  <span>Djibouti Corridor</span>
+                </button>
+                <button 
+                  onClick={() => setActiveTab('bulk-bafs')}
+                  className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition ${activeTab === 'bulk-bafs' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'}`}
+                >
+                  <i data-lucide="file-spreadsheet" class="h-4 w-4"></i>
+                  <span>BAFS Bulk Payouts</span>
+                </button>
+                <button 
+                  onClick={() => setActiveTab('fleet')}
+                  className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition ${activeTab === 'fleet' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'}`}
+                >
+                  <i data-lucide="truck" class="h-4 w-4"></i>
+                  <span>Fleet Telematics</span>
+                </button>
+              </nav>
+              
+              <div className="bg-slate-800 p-3 rounded-lg border border-slate-700">
+                <div className="flex items-center space-x-2 text-xs text-amber-400 font-semibold mb-1">
+                  <i data-lucide="alert-triangle" class="h-4 w-4"></i>
+                  <span>Galafi Border Queue</span>
+                </div>
+                <p className="text-xs text-slate-400">Average clearance time: 3.5 hrs. Customs server synced.</p>
+              </div>
+            </aside>
+
+            {/* Dashboard Content */}
+            <main className="flex-1 p-6 space-y-6 overflow-y-auto">
+              {/* Summary Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="bg-slate-800 border border-slate-700 p-4 rounded-xl">
+                  <p className="text-xs text-slate-400 font-medium">Active Transit Trucks</p>
+                  <p className="text-2xl font-bold mt-1 text-white">142 Units</p>
+                  <span className="text-xs text-emerald-400 mt-2 inline-block">89% on corridor route</span>
+                </div>
+                <div className="bg-slate-800 border border-slate-700 p-4 rounded-xl">
+                  <p className="text-xs text-slate-400 font-medium">Cargo Volume (Tons)</p>
+                  <p className="text-2xl font-bold mt-1 text-white">4,250 MT</p>
+                  <span className="text-xs text-blue-400 mt-2 inline-block">Djibouti ➔ Mojo Corridor</span>
+                </div>
+                <div className="bg-slate-800 border border-slate-700 p-4 rounded-xl">
+                  <p className="text-xs text-slate-400 font-medium">BAFS Pending Settlement</p>
+                  <p className="text-2xl font-bold mt-1 text-amber-400">{totalDisbursement.toLocaleString('en-US', { minimumFractionDigits: 2 })} ETB</p>
+                  <span className="text-xs text-slate-400 mt-2 inline-block">10 Disburse Items queued</span>
+                </div>
+                <div className="bg-slate-800 border border-slate-700 p-4 rounded-xl">
+                  <p className="text-xs text-slate-400 font-medium">Customs Clearance Compliance</p>
+                  <p className="text-2xl font-bold mt-1 text-emerald-400">98.4%</p>
+                  <span className="text-xs text-emerald-400 mt-2 inline-block">Asycuda World Synced</span>
+                </div>
+              </div>
+
+              {/* TAB 1: DJIBOUTI CORRIDOR MONITOR */}
+              {activeTab === 'corridor' && (
+                <div className="space-y-6">
+                  <div className="bg-slate-800 border border-slate-700 rounded-xl p-5">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+                      <h2 className="text-lg font-semibold flex items-center gap-2">
+                        <i data-lucide="map-pin" class="text-blue-400 h-5 w-5"></i>
+                        Live Djibouti - Addis Ababa Corridor Monitor
+                      </h2>
+                      <div className="relative w-full sm:w-64">
+                        <input 
+                          type="text" 
+                          placeholder="Search Waybill, Driver, Truck..." 
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          className="w-full bg-slate-900 border border-slate-700 rounded-lg pl-9 pr-4 py-1.5 text-sm focus:outline-none focus:border-blue-500 text-slate-200"
+                        />
+                        <div className="absolute left-3 top-2 text-slate-500">
+                          <i data-lucide="search" class="h-4 w-4"></i>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-sm text-slate-300">
+                        <thead className="bg-slate-900/60 text-slate-400 uppercase text-xs">
+                          <tr>
+                            <th className="p-3">Waybill #</th>
+                            <th className="p-3">Driver / Plate</th>
+                            <th className="p-3">Cargo Description</th>
+                            <th className="p-3">Route Segment</th>
+                            <th className="p-3">Current Checkpoint</th>
+                            <th className="p-3">Status</th>
+                            <th className="p-3">ETA (Addis/Mojo)</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-700">
+                          {filteredShipments.map((item) => (
+                            <tr key={item.id} className="hover:bg-slate-700/30 transition">
+                              <td className="p-3 font-mono font-medium text-blue-400">{item.id}</td>
+                              <td className="p-3">
+                                <div className="font-medium text-slate-200">{item.driver}</div>
+                                <div className="text-xs text-slate-400 font-mono">{item.vehicle}</div>
+                              </td>
+                              <td className="p-3">{item.cargo}</td>
+                              <td className="p-3 text-xs">{item.origin} ➔ {item.dest}</td>
+                              <td className="p-3 font-medium text-amber-300">{item.checkpoint}</td>
+                              <td className="p-3">
+                                <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
+                                  item.status === 'On Schedule' || item.status === 'In Transit' 
+                                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+                                    : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                                }`}>
+                                  {item.status}
+                                </span>
+                              </td>
+                              <td className="p-3 text-xs text-slate-400">{item.eta}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 2: BAFS BULK PAYOUTS */}
+              {activeTab === 'bulk-bafs' && (
+                <div className="space-y-6">
+                  <div className="bg-slate-800 border border-slate-700 rounded-xl p-5">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                      <div>
+                        <h2 className="text-lg font-semibold flex items-center gap-2">
+                          <i data-lucide="credit-card" class="text-emerald-400 h-5 w-5"></i>
+                          BAFS Ethiopian Bank Bulk Payment Engine
+                        </h2>
+                        <p className="text-xs text-slate-400 mt-1">
+                          Automated disbursement file formatted according to Commercial Bank of Ethiopia (CBE) bulk account schemas.
+                        </p>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <button className="bg-slate-700 hover:bg-slate-600 text-slate-200 px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition">
+                          <i data-lucide="download" class="h-4 w-4"></i>
+                          Export XLSX Template
+                        </button>
+                        <button className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition shadow-lg shadow-blue-600/30">
+                          <i data-lucide="shield-check" class="h-4 w-4"></i>
+                          Execute CBE Batch Transfer
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-sm text-slate-300">
+                        <thead className="bg-slate-900/60 text-slate-400 uppercase text-xs">
+                          <tr>
+                            <th className="p-3">#</th>
+                            <th className="p-3">Credit Account (CBE / Bank)</th>
+                            <th className="p-3">Beneficiary / Disbursement Purpose</th>
+                            <th className="p-3 text-right">Amount (ETB)</th>
+                            <th className="p-3 text-center">Validation Status</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-700">
+                          {bulkPayments.map((pay, idx) => (
+                            <tr key={idx} className="hover:bg-slate-700/30 transition font-mono">
+                              <td className="p-3 text-slate-500 text-xs">{idx + 1}</td>
+                              <td className="p-3 text-blue-300">{pay.creditAccount}</td>
+                              <td className="p-3 text-slate-200 font-sans">{pay.recipient}</td>
+                              <td className="p-3 text-right font-semibold text-emerald-400">
+                                {pay.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })} ETB
+                              </td>
+                              <td className="p-3 text-center font-sans">
+                                <span className="inline-flex items-center gap-1 text-xs text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
+                                  <i data-lucide="check-circle-2" class="h-3 w-3"></i>
+                                  {pay.status}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 3: FLEET TELEMATICS */}
+              {activeTab === 'fleet' && (
+                <div className="bg-slate-800 border border-slate-700 rounded-xl p-6 text-center">
+                  <div className="p-3 bg-blue-600/20 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3 text-blue-400">
+                    <i data-lucide="truck" class="h-6 w-6"></i>
+                  </div>
+                  <h3 className="text-lg font-semibold text-white">Fleet Telematics & Sensor Hub</h3>
+                  <p className="text-slate-400 text-sm max-w-md mx-auto mt-2">
+                    Real-time GPS tracking, multi-tank fuel level monitoring, and Ethiopian axle-load compliance diagnostics are active across 142 vehicles.
+                  </p>
+                </div>
+              )}
+            </main>
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<EthioGlobalTMS />);
+  </script>
+</body>
+</html>
