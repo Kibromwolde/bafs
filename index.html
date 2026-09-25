@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BAFS TRADING - International Logistics & Transport System</title>
+    <title>BAFS Bulk Payment & Truck Transport System</title>
 
     <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -40,22 +40,22 @@
     <!-- HEADER -->
     <header class="bg-slate-900/90 backdrop-blur-md border-b border-slate-800 p-4 sticky top-0 z-30 flex justify-between items-center">
         <div class="flex items-center space-x-3">
-            <div class="bg-blue-600 p-2 rounded-xl text-white shadow-lg shadow-blue-600/30">
-                <i data-lucide="plane-landing" class="w-5 h-5"></i>
+            <div class="bg-amber-600 p-2 rounded-xl text-white shadow-lg shadow-amber-600/30">
+                <i data-lucide="truck" class="w-5 h-5"></i>
             </div>
             <div>
                 <h1 class="text-sm font-bold tracking-tight text-white flex items-center gap-1.5">
-                    BAFS LOGISTICS
-                    <span class="bg-blue-500/20 text-blue-400 text-[10px] px-1.5 py-0.5 rounded border border-blue-500/30 font-mono">TMS</span>
+                    BAFS FLEET & BULK
+                    <span class="bg-amber-500/20 text-amber-400 text-[10px] px-1.5 py-0.5 rounded border border-amber-500/30 font-mono">TMS</span>
                 </h1>
-                <p class="text-[11px] text-slate-400">International Freight System</p>
+                <p class="text-[11px] text-slate-400">Trucking & Bulk Payment Operations</p>
             </div>
         </div>
         <div class="text-right">
             <span id="telegram-username" class="text-xs font-semibold text-slate-200 block">Operator</span>
             <span class="text-[10px] text-emerald-400 font-mono flex items-center justify-end gap-1">
                 <span class="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                Telegram Native
+                Telegram Live
             </span>
         </div>
     </header>
@@ -63,128 +63,175 @@
     <!-- MAIN CONTENT AREA -->
     <main class="p-4 space-y-5 flex-1 overflow-y-auto">
 
-        <!-- TAB 1: DASHBOARD OVERVIEW -->
-        <div id="tab-dashboard" class="tab-content space-y-4">
+        <!-- TAB 1: BAFS BULK PAYMENTS (DATA FROM TEMPLATE) -->
+        <div id="tab-payments" class="tab-content space-y-4">
+
+            <!-- Summary Card for Template Data -->
+            <div class="bg-gradient-to-br from-slate-900 to-amber-950/40 border border-amber-500/30 p-4 rounded-2xl space-y-3">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <span class="text-[10px] font-bold text-amber-400 uppercase tracking-wider">Active Bulk Payment Batch</span>
+                        <h2 class="text-xl font-mono font-bold text-white mt-0.5">ETB 168,506.64</h2>
+                    </div>
+                    <span class="bg-amber-500/20 text-amber-300 text-[10px] font-bold px-2 py-1 rounded-lg border border-amber-500/30">
+                        10 Accounts
+                    </span>
+                </div>
+                <p class="text-[11px] text-slate-300">Driver & Contractor Payout Template Batch</p>
+
+                <div class="flex gap-2 pt-1">
+                    <button onclick="processBulkTransfer()" class="flex-1 bg-amber-600 hover:bg-amber-500 text-white font-bold py-2 px-3 rounded-xl text-xs shadow-lg shadow-amber-600/30 flex items-center justify-center gap-1.5">
+                        <i data-lucide="send" class="w-3.5 h-3.5"></i> Process Batch Transfer
+                    </button>
+                    <label class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold py-2 px-3 rounded-xl text-xs border border-slate-700 cursor-pointer flex items-center justify-center gap-1">
+                        <i data-lucide="upload" class="w-3.5 h-3.5"></i>
+                        <input type="file" accept=".xlsx, .csv" class="hidden" onchange="handleFileUpload(event)">
+                    </label>
+                </div>
+            </div>
+
+            <!-- Ledger Table -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
+                <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                    <h2 class="text-xs font-bold text-slate-300 uppercase flex items-center gap-2">
+                        <i data-lucide="credit-card" class="w-4 h-4 text-amber-400"></i>
+                        Credit Accounts Ledger
+                    </h2>
+                    <span id="batch-status" class="text-[10px] font-mono text-amber-400">PENDING APPROVAL</span>
+                </div>
+
+                <div id="payment-items-container" class="space-y-2 max-h-72 overflow-y-auto pr-1">
+                    <!-- Populated dynamically via JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: TRUCK FLEET DASHBOARD -->
+        <div id="tab-dashboard" class="tab-content hidden space-y-4">
             <!-- Metrics Cards -->
             <div class="grid grid-cols-3 gap-2.5">
                 <div class="bg-slate-900 border border-slate-800 p-3 rounded-2xl">
                     <div class="flex justify-between items-center text-slate-400 mb-1">
-                        <span class="text-[9px] uppercase font-bold">Shipments</span>
-                        <i data-lucide="package" class="w-3.5 h-3.5 text-blue-400"></i>
+                        <span class="text-[9px] uppercase font-bold">Trucks</span>
+                        <i data-lucide="truck" class="w-3.5 h-3.5 text-amber-400"></i>
                     </div>
-                    <div id="stat-total" class="text-lg font-bold font-mono">2</div>
+                    <div id="stat-trucks" class="text-lg font-bold font-mono text-white">12</div>
                 </div>
 
                 <div class="bg-slate-900 border border-slate-800 p-3 rounded-2xl">
                     <div class="flex justify-between items-center text-slate-400 mb-1">
-                        <span class="text-[9px] uppercase font-bold">In-Transit</span>
-                        <i data-lucide="truck" class="w-3.5 h-3.5 text-emerald-400"></i>
+                        <span class="text-[9px] uppercase font-bold">En Route</span>
+                        <i data-lucide="navigation" class="w-3.5 h-3.5 text-emerald-400"></i>
                     </div>
-                    <div id="stat-transit" class="text-lg font-bold font-mono text-emerald-400">1</div>
+                    <div id="stat-transit" class="text-lg font-bold font-mono text-emerald-400">5</div>
                 </div>
 
                 <div class="bg-slate-900 border border-slate-800 p-3 rounded-2xl">
                     <div class="flex justify-between items-center text-slate-400 mb-1">
                         <span class="text-[9px] uppercase font-bold">Revenue</span>
-                        <i data-lucide="dollar-sign" class="w-3.5 h-3.5 text-amber-400"></i>
+                        <i data-lucide="dollar-sign" class="w-3.5 h-3.5 text-blue-400"></i>
                     </div>
-                    <div id="stat-revenue" class="text-lg font-bold font-mono text-amber-400">$2.95K</div>
+                    <div id="stat-revenue" class="text-lg font-bold font-mono text-blue-400">ETB 480K</div>
                 </div>
             </div>
 
-            <!-- Volume Chart -->
+            <!-- Fleet Volume Chart -->
             <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
                 <h2 class="text-xs font-bold text-slate-300 uppercase mb-3 flex items-center gap-2">
-                    <i data-lucide="bar-chart-3" class="w-4 h-4 text-blue-400"></i>
-                    Monthly Corridor Volume (CBM)
+                    <i data-lucide="bar-chart-3" class="w-4 h-4 text-amber-400"></i>
+                    Monthly Tonnage Hauled (Tons)
                 </h2>
                 <div class="h-36">
-                    <canvas id="volumeChart"></canvas>
+                    <canvas id="tonnageChart"></canvas>
                 </div>
             </div>
 
-            <!-- Active Shipments Overview -->
+            <!-- Active Truck Trips Overview -->
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
                 <div class="flex justify-between items-center">
                     <h2 class="text-xs font-bold text-slate-300 uppercase flex items-center gap-2">
-                        <i data-lucide="activity" class="w-4 h-4 text-blue-400"></i>
-                        Active Waybills
+                        <i data-lucide="map-pin" class="w-4 h-4 text-amber-400"></i>
+                        Active Overland Trips
                     </h2>
-                    <button onclick="switchTab('shipments')" class="text-xs text-blue-400 font-semibold flex items-center gap-1">
+                    <button onclick="switchTab('trips')" class="text-xs text-amber-400 font-semibold flex items-center gap-1">
                         View All <i data-lucide="chevron-right" class="w-3 h-3"></i>
                     </button>
                 </div>
-                <div id="dashboard-shipments-preview" class="space-y-2">
+                <div id="dashboard-trips-preview" class="space-y-2">
                     <!-- Dynamic preview loaded via JS -->
                 </div>
             </div>
         </div>
 
-        <!-- TAB 2: SHIPMENTS & WAYBILLS -->
-        <div id="tab-shipments" class="tab-content hidden space-y-4">
+        <!-- TAB 3: TRIPS & DISPATCH MANAGEMENT -->
+        <div id="tab-trips" class="tab-content hidden space-y-4">
             <div class="flex justify-between items-center">
                 <h2 class="text-xs font-bold text-slate-300 uppercase flex items-center gap-2">
-                    <i data-lucide="list-filter" class="w-4 h-4 text-blue-400"></i>
-                    Shipment Ledger
+                    <i data-lucide="list-filter" class="w-4 h-4 text-amber-400"></i>
+                    Truck Dispatch Manifest
                 </h2>
-                <button onclick="openNewModal()" class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-1.5 rounded-xl font-bold flex items-center gap-1 shadow-lg shadow-blue-600/30">
-                    <i data-lucide="plus" class="w-3.5 h-3.5"></i> Dispatch Job
+                <button onclick="openNewTripModal()" class="bg-amber-600 hover:bg-amber-500 text-white text-xs px-3 py-1.5 rounded-xl font-bold flex items-center gap-1 shadow-lg shadow-amber-600/30">
+                    <i data-lucide="plus" class="w-3.5 h-3.5"></i> Dispatch Truck
                 </button>
             </div>
 
-            <div id="shipments-container" class="space-y-3">
+            <div id="trips-container" class="space-y-3">
                 <!-- Dynamically Populated Cards -->
             </div>
         </div>
 
-        <!-- TAB 3: RATE CALCULATOR & QUOTE -->
-        <div id="tab-quote" class="tab-content hidden space-y-4">
+        <!-- TAB 4: FREIGHT & FUEL CALCULATOR -->
+        <div id="tab-calc" class="tab-content hidden space-y-4">
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
                 <h2 class="text-xs font-bold text-slate-300 uppercase flex items-center gap-2">
                     <i data-lucide="calculator" class="w-4 h-4 text-emerald-400"></i>
-                    Instant Freight Quote Calculator
+                    Truck Freight & Fuel Margin Calculator
                 </h2>
-                <p class="text-xs text-slate-400">Estimate international freight costs across Sea, Air, and Overland routes.</p>
+                <p class="text-xs text-slate-400">Calculate net trip profit after fuel allowance and driver stipend.</p>
 
-                <form onsubmit="calculateQuote(event)" class="space-y-3 pt-2">
+                <form onsubmit="calculateTripMargin(event)" class="space-y-3 pt-2">
                     <div>
-                        <label class="text-[11px] text-slate-400 block mb-1">Select Freight Route</label>
-                        <select id="calc-route" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-blue-500">
-                            <option value="SEA_NINGBO_DJIBOUTI">China (Ningbo) ➔ Djibouti Port (Sea LCL)</option>
-                            <option value="LAND_DJIBOUTI_MOJO">Djibouti Port ➔ Ethiopia (Mojo Dry Port)</option>
-                            <option value="AIR_ISTANBUL_ADDIS">Turkey (Istanbul) ➔ Ethiopia (Addis Ababa Air)</option>
+                        <label class="text-[11px] text-slate-400 block mb-1">Transport Route</label>
+                        <select id="calc-route" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-amber-500">
+                            <option value="DJIBOUTI_MOJO">Djibouti Port ➔ Mojo Dry Port (780 km)</option>
+                            <option value="MOJO_HAWASSA">Mojo ➔ Hawassa Industrial Park (220 km)</option>
+                            <option value="ADDIS_MEKELE">Addis Ababa ➔ Mekele Corridor (780 km)</option>
                         </select>
                     </div>
 
                     <div class="grid grid-cols-2 gap-2">
                         <div>
-                            <label class="text-[11px] text-slate-400 block mb-1">Gross Weight (KG)</label>
-                            <input type="number" id="calc-weight" required value="500" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-blue-500">
+                            <label class="text-[11px] text-slate-400 block mb-1">Total Cargo Weight (Tons)</label>
+                            <input type="number" id="calc-weight" required value="32" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-amber-500">
                         </div>
                         <div>
-                            <label class="text-[11px] text-slate-400 block mb-1">Cargo Volume (CBM)</label>
-                            <input type="number" step="0.1" id="calc-volume" required value="2.5" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-blue-500">
+                            <label class="text-[11px] text-slate-400 block mb-1">Contract Rate / Ton (ETB)</label>
+                            <input type="number" id="calc-rate" required value="2800" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-amber-500">
                         </div>
                     </div>
 
                     <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl text-xs shadow-lg shadow-emerald-600/30">
-                        Calculate Quotation
+                        Calculate Net Profit Margin
                     </button>
                 </form>
 
-                <div id="quote-result" class="hidden bg-slate-950 border border-slate-800/80 p-3.5 rounded-xl space-y-2 mt-3 font-mono text-xs">
-                    <div class="text-slate-400 font-semibold border-b border-slate-800 pb-1">Quotation Summary</div>
+                <div id="calc-result" class="hidden bg-slate-950 border border-slate-800/80 p-3.5 rounded-xl space-y-2 mt-3 font-mono text-xs">
+                    <div class="text-slate-400 font-semibold border-b border-slate-800 pb-1">Trip Profitability Breakdown</div>
                     <div class="flex justify-between text-slate-300">
-                        <span>Base Handling:</span>
-                        <span id="res-base" class="text-white">$0.00 USD</span>
+                        <span>Gross Freight Contract:</span>
+                        <span id="res-gross" class="text-white">ETB 0.00</span>
                     </div>
                     <div class="flex justify-between text-slate-300">
-                        <span>Weight/Volume Cost:</span>
-                        <span id="res-variable" class="text-white">$0.00 USD</span>
+                        <span>Est. Fuel Allowance:</span>
+                        <span id="res-fuel" class="text-rose-400">-ETB 0.00</span>
+                    </div>
+                    <div class="flex justify-between text-slate-300">
+                        <span>Driver Stipend & Expenses:</span>
+                        <span id="res-stipend" class="text-rose-400">-ETB 0.00</span>
                     </div>
                     <div class="flex justify-between text-emerald-400 font-bold pt-1 border-t border-slate-800">
-                        <span>Estimated Total:</span>
-                        <span id="res-total">$0.00 USD</span>
+                        <span>Net Profit Margin:</span>
+                        <span id="res-net">ETB 0.00</span>
                     </div>
                 </div>
             </div>
@@ -193,75 +240,88 @@
     </main>
 
     <!-- BOTTOM NAVIGATION BAR -->
-    <nav class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-slate-900/95 backdrop-blur-md border-t border-slate-800 px-6 py-2.5 flex justify-between z-40">
-        <button onclick="switchTab('dashboard')" id="nav-dashboard" class="flex flex-col items-center gap-1 text-blue-500">
+    <nav class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-slate-900/95 backdrop-blur-md border-t border-slate-800 px-4 py-2.5 flex justify-between z-40">
+        <button onclick="switchTab('payments')" id="nav-payments" class="flex flex-col items-center gap-1 text-amber-500">
+            <i data-lucide="wallet" class="w-5 h-5"></i>
+            <span class="text-[10px] font-semibold">Bulk Payments</span>
+        </button>
+
+        <button onclick="switchTab('dashboard')" id="nav-dashboard" class="flex flex-col items-center gap-1 text-slate-500">
             <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
             <span class="text-[10px] font-semibold">Dashboard</span>
         </button>
 
-        <button onclick="switchTab('shipments')" id="nav-shipments" class="flex flex-col items-center gap-1 text-slate-500">
+        <button onclick="switchTab('trips')" id="nav-trips" class="flex flex-col items-center gap-1 text-slate-500">
             <i data-lucide="truck" class="w-5 h-5"></i>
-            <span class="text-[10px] font-semibold">Shipments</span>
+            <span class="text-[10px] font-semibold">Trucks</span>
         </button>
 
-        <button onclick="switchTab('quote')" id="nav-quote" class="flex flex-col items-center gap-1 text-slate-500">
+        <button onclick="switchTab('calc')" id="nav-calc" class="flex flex-col items-center gap-1 text-slate-500">
             <i data-lucide="calculator" class="w-5 h-5"></i>
-            <span class="text-[10px] font-semibold">Quote</span>
+            <span class="text-[10px] font-semibold">Calculator</span>
         </button>
     </nav>
 
-    <!-- CREATE SHIPMENT MODAL -->
-    <div id="new-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-end justify-center">
+    <!-- DISPATCH TRUCK MODAL -->
+    <div id="new-trip-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-end justify-center">
         <div class="bg-slate-900 border-t border-slate-800 rounded-t-3xl max-w-md w-full p-5 space-y-4 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-                <h3 class="text-xs font-bold text-white uppercase">Dispatch New International Waybill</h3>
-                <button onclick="closeNewModal()" class="text-slate-400 hover:text-white">
+                <h3 class="text-xs font-bold text-white uppercase">Dispatch New Overland Freight Truck</h3>
+                <button onclick="closeNewTripModal()" class="text-slate-400 hover:text-white">
                     <i data-lucide="x" class="w-4 h-4"></i>
                 </button>
             </div>
 
-            <form onsubmit="handleCreateShipment(event)" class="space-y-3 text-xs">
+            <form onsubmit="handleDispatchTruck(event)" class="space-y-3 text-xs">
                 <div>
-                    <label class="text-slate-400 block mb-1">Origin Port / Address</label>
-                    <input type="text" id="origin" required placeholder="e.g. Ningbo Port, China" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white focus:outline-none focus:border-blue-500">
+                    <label class="text-slate-400 block mb-1">Truck Plate Number & Driver Name</label>
+                    <input type="text" id="truck_info" required placeholder="e.g. ETH-3-A9842 (Abebe Kebede)" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white focus:outline-none focus:border-amber-500">
+                </div>
+                <div>
+                    <label class="text-slate-400 block mb-1">Origin Port / Terminal</label>
+                    <input type="text" id="trip_origin" required placeholder="e.g. Djibouti Container Terminal" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white focus:outline-none focus:border-amber-500">
                 </div>
                 <div>
                     <label class="text-slate-400 block mb-1">Destination Address</label>
-                    <input type="text" id="destination" required placeholder="e.g. Mojo Dry Port, Ethiopia" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white focus:outline-none focus:border-blue-500">
+                    <input type="text" id="trip_destination" required placeholder="e.g. Mojo Dry Port, Ethiopia" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white focus:outline-none focus:border-amber-500">
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
-                        <label class="text-slate-400 block mb-1">Weight (KG)</label>
-                        <input type="number" step="0.1" id="weight" required placeholder="1200" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white focus:outline-none focus:border-blue-500">
+                        <label class="text-slate-400 block mb-1">Weight (Tons)</label>
+                        <input type="number" step="0.1" id="trip_weight" required placeholder="35" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white focus:outline-none focus:border-amber-500">
                     </div>
                     <div>
-                        <label class="text-slate-400 block mb-1">Volume (CBM)</label>
-                        <input type="number" step="0.1" id="volume" required placeholder="4.5" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white focus:outline-none focus:border-blue-500">
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="text-slate-400 block mb-1">Cargo Type</label>
-                        <input type="text" id="cargo_type" required placeholder="Industrial Spares" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white focus:outline-none focus:border-blue-500">
-                    </div>
-                    <div>
-                        <label class="text-slate-400 block mb-1">Total Price ($ USD)</label>
-                        <input type="number" id="price" required placeholder="850" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white focus:outline-none focus:border-blue-500">
+                        <label class="text-slate-400 block mb-1">Total Contract (ETB)</label>
+                        <input type="number" id="trip_price" required placeholder="95000" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white focus:outline-none focus:border-amber-500">
                     </div>
                 </div>
 
-                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-blue-600/30 mt-2">
-                    Generate Waybill & Save
+                <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-amber-600/30 mt-2">
+                    Confirm Truck Dispatch
                 </button>
             </form>
         </div>
     </div>
 
     <script>
-        // --- INITIAL DATA STORE ---
-        let shipments = [
-            { id: 1, tracking_number: 'BAFS-TR-88102', origin_address: 'Ningbo, China', destination_address: 'Mojo Dry Port, Ethiopia', weight_kg: 1200, volume_cbm: 4.5, current_status: 'IN_TRANSIT', current_location: 'Galafi Customs Border', total_price_usd: 850 },
-            { id: 2, tracking_number: 'BAFS-TR-88103', origin_address: 'Istanbul, Turkey', destination_address: 'Kaliti Terminal, Addis Ababa', weight_kg: 450, volume_cbm: 1.8, current_status: 'CUSTOMS_HOLD', current_location: 'ADD Air Cargo Terminal', total_price_usd: 2105 }
+        // --- BAFS TEMPLATE DATA (10 ACCOUNTS) ---
+        let bafsTemplateData = [
+            { creditAccount: '1000010277427', amount: 10550.00, status: 'READY' },
+            { creditAccount: '1000010277427', amount: 11545.69, status: 'READY' },
+            { creditAccount: '1000010277427', amount: 45500.18, status: 'READY' },
+            { creditAccount: '1000591321707', amount: 11000.00, status: 'READY' },
+            { creditAccount: '1000597909512', amount: 24000.34, status: 'READY' },
+            { creditAccount: '1000390460345', amount: 18000.24, status: 'READY' },
+            { creditAccount: '1000390460345', amount: 14000.56, status: 'READY' },
+            { creditAccount: '1000417706171', amount: 10550.00, status: 'READY' },
+            { creditAccount: '1000262015606', amount: 7358.88, status: 'READY' },
+            { creditAccount: '1000371841699', amount: 16000.75, status: 'READY' }
+        ];
+
+        // --- TRUCK TRIPS DATA ---
+        let truckTrips = [
+            { id: 1, waybill: 'BAFS-TRK-901', plate: 'ETH-3-A9842', origin: 'Djibouti Container Terminal', destination: 'Mojo Dry Port', weight: 34, status: 'EN_ROUTE', checkpoint: 'Galafi Border Checkpoint', price: 95200 },
+            { id: 2, waybill: 'BAFS-TRK-902', plate: 'ETH-3-B1102', origin: 'Mojo Dry Port', destination: 'Hawassa Industrial Park', weight: 28, status: 'LOADING', checkpoint: 'Mojo Loading Terminal', price: 42000 }
         ];
 
         // --- TELEGRAM SDK INTEGRATION ---
@@ -283,8 +343,9 @@
         // --- INIT ON DOM READY ---
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
-            renderShipments();
-            renderChart();
+            renderBulkPayments();
+            renderTruckTrips();
+            renderTonnageChart();
         });
 
         // --- TAB SWITCHING ---
@@ -293,40 +354,77 @@
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
             document.getElementById(`tab-${tabId}`).classList.remove('hidden');
 
-            ['dashboard', 'shipments', 'quote'].forEach(t => {
+            ['payments', 'dashboard', 'trips', 'calc'].forEach(t => {
                 const btn = document.getElementById(`nav-${t}`);
                 if (t === tabId) {
                     btn.classList.remove('text-slate-500');
-                    btn.classList.add('text-blue-500');
+                    btn.classList.add('text-amber-500');
                 } else {
-                    btn.classList.remove('text-blue-500');
+                    btn.classList.remove('text-amber-500');
                     btn.classList.add('text-slate-500');
                 }
             });
             lucide.createIcons();
         }
 
-        // --- RENDER SHIPMENTS ---
-        function renderShipments() {
-            const container = document.getElementById('shipments-container');
-            const previewContainer = document.getElementById('dashboard-shipments-preview');
+        // --- RENDER BAFS BULK PAYMENTS ---
+        function renderBulkPayments() {
+            const container = document.getElementById('payment-items-container');
+            container.innerHTML = bafsTemplateData.map((item, idx) => `
+                <div class="bg-slate-950 border border-slate-800 p-2.5 rounded-xl flex justify-between items-center text-xs">
+                    <div class="space-y-0.5">
+                        <span class="text-[10px] text-slate-500 font-mono">#${idx + 1} Credit Account</span>
+                        <div class="font-mono font-bold text-slate-200">${item.creditAccount}</div>
+                    </div>
+                    <div class="text-right">
+                        <span class="font-mono font-bold text-amber-400">ETB ${item.amount.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+                        <div class="text-[9px] font-bold ${item.status === 'PROCESSED' ? 'text-emerald-400' : 'text-amber-500'} font-mono">${item.status}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
 
-            const content = shipments.map(item => `
+        function processBulkTransfer() {
+            triggerHaptic();
+            bafsTemplateData.forEach(item => item.status = 'PROCESSED');
+            document.getElementById('batch-status').innerText = 'COMPLETED / DISBURSED';
+            document.getElementById('batch-status').className = 'text-[10px] font-mono text-emerald-400 font-bold';
+            renderBulkPayments();
+            if (tg) {
+                tg.showAlert('BAFS Bulk Payment Batch (ETB 168,506.64) executed successfully!');
+            } else {
+                alert('BAFS Bulk Payment Batch (ETB 168,506.64) executed successfully!');
+            }
+        }
+
+        function handleFileUpload(event) {
+            triggerHaptic();
+            const file = event.target.files[0];
+            if (file) {
+                alert(`File "${file.name}" uploaded successfully for parsing.`);
+            }
+        }
+
+        // --- RENDER TRUCK TRIPS ---
+        function renderTruckTrips() {
+            const container = document.getElementById('trips-container');
+            const previewContainer = document.getElementById('dashboard-trips-preview');
+
+            const content = truckTrips.map(item => `
                 <div class="bg-slate-900 border border-slate-800 p-3.5 rounded-2xl space-y-2">
                     <div class="flex justify-between items-start">
                         <div>
-                            <span class="text-xs font-mono font-bold text-blue-400">${item.tracking_number}</span>
-                            <div class="text-xs font-bold text-white mt-0.5">${item.origin_address} ➔ ${item.destination_address}</div>
+                            <span class="text-xs font-mono font-bold text-amber-400">${item.waybill}</span>
+                            <div class="text-xs font-bold text-white mt-0.5">${item.plate} (${item.weight} Tons)</div>
                         </div>
                         <span class="px-2 py-0.5 rounded text-[10px] font-bold border ${
-                            item.current_status === 'IN_TRANSIT' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
-                            item.current_status === 'CUSTOMS_HOLD' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
-                            'bg-blue-500/10 text-blue-400 border-blue-500/20'
-                        }">${item.current_status.replace('_', ' ')}</span>
+                            item.status === 'EN_ROUTE' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                        }">${item.status.replace('_', ' ')}</span>
                     </div>
+                    <div class="text-xs text-slate-300 font-semibold">${item.origin} ➔ ${item.destination}</div>
                     <div class="flex justify-between text-[11px] text-slate-400 font-mono bg-slate-950 p-2 rounded-xl border border-slate-800/80">
-                        <span>Checkpoint: ${item.current_location}</span>
-                        <span class="text-emerald-400 font-bold">$${item.total_price_usd} USD</span>
+                        <span>Status: ${item.checkpoint}</span>
+                        <span class="text-amber-400 font-bold">ETB ${item.price.toLocaleString()}</span>
                     </div>
                 </div>
             `).join('');
@@ -337,77 +435,73 @@
         }
 
         // --- MODAL CONTROLS ---
-        function openNewModal() { triggerHaptic(); document.getElementById('new-modal').classList.remove('hidden'); }
-        function closeNewModal() { document.getElementById('new-modal').classList.add('hidden'); }
+        function openNewTripModal() { triggerHaptic(); document.getElementById('new-trip-modal').classList.remove('hidden'); }
+        function closeNewTripModal() { document.getElementById('new-trip-modal').classList.add('hidden'); }
 
-        // --- CREATE SHIPMENT ---
-        function handleCreateShipment(e) {
+        function handleDispatchTruck(e) {
             e.preventDefault();
             triggerHaptic();
 
-            const newJob = {
-                id: shipments.length + 1,
-                tracking_number: `BAFS-TR-${Math.floor(10000 + Math.random() * 90000)}`,
-                origin_address: document.getElementById('origin').value,
-                destination_address: document.getElementById('destination').value,
-                weight_kg: parseFloat(document.getElementById('weight').value),
-                volume_cbm: parseFloat(document.getElementById('volume').value),
-                current_status: 'IN_TRANSIT',
-                current_location: 'Origin Processing Hub',
-                total_price_usd: parseFloat(document.getElementById('price').value)
+            const newTrip = {
+                id: truckTrips.length + 1,
+                waybill: `BAFS-TRK-${Math.floor(100 + Math.random() * 900)}`,
+                plate: document.getElementById('truck_info').value,
+                origin: document.getElementById('trip_origin').value,
+                destination: document.getElementById('trip_destination').value,
+                weight: parseFloat(document.getElementById('trip_weight').value),
+                status: 'EN_ROUTE',
+                checkpoint: 'Dispatched from Terminal',
+                price: parseFloat(document.getElementById('trip_price').value)
             };
 
-            shipments.unshift(newJob);
-            renderShipments();
-            closeNewModal();
-            switchTab('shipments');
+            truckTrips.unshift(newTrip);
+            renderTruckTrips();
+            closeNewTripModal();
+            switchTab('trips');
         }
 
-        // --- QUOTE CALCULATOR ---
-        function calculateQuote(e) {
+        // --- CALCULATOR ---
+        function calculateTripMargin(e) {
             e.preventDefault();
             triggerHaptic();
 
             const route = document.getElementById('calc-route').value;
             const weight = parseFloat(document.getElementById('calc-weight').value);
-            const volume = parseFloat(document.getElementById('calc-volume').value);
+            const rate = parseFloat(document.getElementById('calc-rate').value);
 
-            let base = 150;
-            let variable = 0;
+            const gross = weight * rate;
+            let fuel = 0;
+            let stipend = 12000;
 
-            if (route === 'SEA_NINGBO_DJIBOUTI') {
-                base = 350;
-                variable = volume * 45;
-            } else if (route === 'LAND_DJIBOUTI_MOJO') {
-                base = 150;
-                variable = volume * 25;
-            } else if (route === 'AIR_ISTANBUL_ADDIS') {
-                base = 80;
-                variable = weight * 4.5;
+            if (route === 'DJIBOUTI_MOJO') {
+                fuel = 32000;
+            } else if (route === 'MOJO_HAWASSA') {
+                fuel = 12000;
+            } else if (route === 'ADDIS_MEKELE') {
+                fuel = 38000;
             }
 
-            const total = base + variable;
+            const net = gross - fuel - stipend;
 
-            document.getElementById('res-base').innerText = `$${base.toFixed(2)} USD`;
-            document.getElementById('res-variable').innerText = `$${variable.toFixed(2)} USD`;
-            document.getElementById('res-total').innerText = `$${total.toFixed(2)} USD`;
-            document.getElementById('quote-result').classList.remove('hidden');
+            document.getElementById('res-gross').innerText = `ETB ${gross.toLocaleString(undefined, {minimumFractionDigits:2})}`;
+            document.getElementById('res-fuel').innerText = `-ETB ${fuel.toLocaleString(undefined, {minimumFractionDigits:2})}`;
+            document.getElementById('res-stipend').innerText = `-ETB ${stipend.toLocaleString(undefined, {minimumFractionDigits:2})}`;
+            document.getElementById('res-net').innerText = `ETB ${net.toLocaleString(undefined, {minimumFractionDigits:2})}`;
+            document.getElementById('calc-result').classList.remove('hidden');
         }
 
         // --- CHART RENDER ---
-        function renderChart() {
-            const ctx = document.getElementById('volumeChart').getContext('2d');
+        function renderTonnageChart() {
+            const ctx = document.getElementById('tonnageChart').getContext('2d');
             new Chart(ctx, {
-                type: 'line',
+                type: 'bar',
                 data: {
                     labels: ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
                     datasets: [{
-                        label: 'Volume (CBM)',
-                        data: [12, 19, 15, 25, 22, 38],
-                        borderColor: '#3b82f6',
-                        backgroundColor: 'rgba(59, 130, 246, 0.15)',
-                        fill: true,
-                        tension: 0.4
+                        label: 'Tonnage Hauled',
+                        data: [280, 340, 420, 390, 510, 680],
+                        backgroundColor: '#f59e0b',
+                        borderRadius: 6
                     }]
                 },
                 options: {
