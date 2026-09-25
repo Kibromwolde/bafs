@@ -1,1277 +1,685 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { 
-  Truck, 
-  Plane, 
-  Ship, 
-  FileText, 
-  Globe, 
-  Search, 
-  Filter, 
-  CheckCircle2, 
-  Clock, 
-  AlertTriangle, 
-  MapPin, 
-  ArrowRight, 
-  RefreshCw, 
-  Copy, 
-  PlusCircle, 
-  Trash2, 
-  Edit3, 
-  Phone, 
-  ShieldCheck, 
-  Send, 
-  X, 
-  ChevronRight,
-  Package,
-  Layers,
-  FileCheck,
-  Building2,
-  Anchor,
-  Compass,
-  Download,
-  ExternalLink,
-  Navigation,
-  Info
-} from 'lucide-react';
-
-const TRANSLATIONS = {
-  en: {
-    title: "BAFS GLOBAL LOGISTICS",
-    subtitle: "International Transport Management System (ITMS)",
-    connected: "Active Operations System",
-    welcome: "Welcome Back",
-    dashOverview: "Global Freight Status & Cross-Border Logistics Operations",
-    activeShipments: "Active Freight",
-    customsPending: "Customs Pending",
-    deliveredJobs: "Delivered Shipments",
-    airFreight: "Air Freight",
-    oceanFreight: "Ocean Freight",
-    roadFreight: "Road Freight",
-    dispatchShipment: "New International Freight",
-    recentShipments: "Active Global Freight Corridors",
-    viewAll: "View All",
-    shipmentsTitle: "International Freight Operations",
-    shipmentsSubtitle: "Track Air, Ocean, and Road shipments across global corridors",
-    searchPlaceholder: "Search Tracking ID, Vessel/Flight, Container, Driver or Destination...",
-    dispatchNew: "Register New Freight Shipment",
-    dispatchSubtitle: "Create multi-modal consignment and initialize customs workflow",
-    trackingId: "Tracking Number / ID",
-    mode: "Transport Mode",
-    carrier: "Carrier / Vessel / Airline",
-    voyageFlight: "Voyage / Flight / Truck No.",
-    consignee: "Consignee / Importer",
-    shipper: "Shipper / Exporter",
-    originPort: "Origin Port / Airport / Terminal",
-    destPort: "Destination Port / Terminal",
-    cargoDescription: "Cargo Goods Description",
-    cargoWeight: "Gross Weight (Tons / KGs)",
-    cargoVolume: "Volume (CBM / TEU)",
-    estimatedArrival: "Estimated Time of Arrival (ETA)",
-    customsDocs: "Customs & Clearance Documents",
-    docBol: "Bill of Lading (B/L) / Waybill",
-    docAwb: "Air Waybill (AWB)",
-    docInvoice: "Commercial Invoice",
-    docPacking: "Packing List",
-    docDeclaration: "Customs Declaration (IM4)",
-    dutyTariffStatus: "Duty & Tariff Assessment",
-    confirmDispatch: "Confirm & Register Shipment",
-    customsTitle: "Customs & Compliance Control",
-    customsSubtitle: "Verify cargo documents, duty payments, and release status",
-    navDashboard: "Dashboard",
-    navShipments: "Shipments",
-    navCustoms: "Customs Docs",
-    navDispatch: "New Consignment",
-    navCorridors: "Corridors & Map",
-    statusPending: "Awaiting Departure",
-    statusInTransit: "In Transit",
-    statusCustoms: "Customs Inspection",
-    statusCleared: "Customs Released",
-    statusDelivered: "Final Delivery",
-    modeAir: "Air Freight ✈️",
-    modeOcean: "Ocean Cargo 🚢",
-    modeRoad: "Cross-Border Road 🚛",
-    copy: "Copy",
-    copied: "Copied to clipboard!",
-    statusUpdateModal: "Update Shipment Milestone",
-    currentLocation: "Current Waypoint Location",
-    saveChanges: "Save Status",
-    resetBtn: "Reset Logistics Data",
-    documents: "Consignment Documentation",
-    dutyPaid: "Duty Paid & Verified",
-    dutyPending: "Duty Assessment Pending",
-    exempt: "Duty Exempt",
-    waypointLog: "Transit Waypoints Log"
-  },
-  am: {
-    title: "ባፍስ ግሎባል ሎጂስቲክስ",
-    subtitle: "ዓለም አቀፍ የትራንስፖርት አስተዳደር ስርዓት (ITMS)",
-    connected: "የነቃ የስራ ስርዓት",
-    welcome: "እንኳን ደህና መጡ",
-    dashOverview: "የዓለም አቀፍ ጭነቶች ሁኔታ እና የድንበር ተሻጋሪ ሎጂስቲክስ",
-    activeShipments: "በጉዞ ላይ ያሉ ጭነቶች",
-    customsPending: "ጉምሩክ በመጠበቅ ላይ",
-    deliveredJobs: "የደረሱ ጭነቶች",
-    airFreight: "የአየር ጭነት",
-    oceanFreight: "የባህር ጭነት",
-    roadFreight: "የየብስ ትራንስፖርት",
-    dispatchShipment: "አዲስ ዓለም አቀፍ ጭነት",
-    recentShipments: "የነቁ ዓለም አቀፍ የመጓጓዣ መስመሮች",
-    viewAll: "ሁሉንም ይመልከቱ",
-    shipmentsTitle: "ዓለም አቀፍ የትራንስፖርት ስራዎች",
-    shipmentsSubtitle: "የአየር፣ የባህር እና የየብስ ጭነቶችን ይከታተሉ",
-    searchPlaceholder: "በመከታተያ ቁጥር፣ መርከብ፣ ኮንቴይነር ወይም መድረሻ ይፈልጉ...",
-    dispatchNew: "አዲስ የዓለም አቀፍ ጭነት መዝግብ",
-    dispatchSubtitle: "ባለብዙ መንገድ ጭነት መዝግብ እና የጉምሩክ ሂደት ጀምር",
-    trackingId: "የመከታተያ ቁጥር (ID)",
-    mode: "የትራንስፖርት ዓይነት",
-    carrier: "አጓጓዥ / መርከብ / አየር መንገድ",
-    voyageFlight: "የጉዞ / የበረራ / የመኪና ቁጥር",
-    consignee: "ተቀባይ / አስመጪ",
-    shipper: "ላኪ / ኤክስፖርተር",
-    originPort: "መነሻ ወደብ / ኤርፖርት",
-    destPort: "መድረሻ ወደብ / ተርሚናል",
-    cargoDescription: "የጭነቱ ዓይነት እና ዝርዝር",
-    cargoWeight: "ክብደት (በቶን / በኪሎ)",
-    cargoVolume: "መጠን (CBM / TEU)",
-    estimatedArrival: "የሚደርስበት ቀን (ETA)",
-    customsDocs: "የጉምሩክ እና የሰነዶች ሁኔታ",
-    docBol: "የባህር ጭነት ሰነድ (B/L)",
-    docAwb: "የአየር ጭነት ሰነድ (AWB)",
-    docInvoice: "የንግድ ኢንቮይስ",
-    docPacking: "የፓኪንግ ሊስት ሰነድ",
-    docDeclaration: "የጉምሩክ ዲክላራሲዮን (IM4)",
-    dutyTariffStatus: "የቀረጥ እና ታሪፍ ሁኔታ",
-    confirmDispatch: "አስመዝግብ እና አሰማራ",
-    customsTitle: "የጉምሩክ እና የህግ ተገዥነት ቁጥጥር",
-    customsSubtitle: "የሰነዶች ትክክለኛነት፣ የቀረጥ ክፍያ እና የጭነት መልቀቂያ ይከታተሉ",
-    navDashboard: "ዳሽቦርድ",
-    navShipments: "ጭነቶች",
-    navCustoms: "የጉምሩክ ሰነዶች",
-    navDispatch: "አዲስ ጭነት",
-    navCorridors: "ኮሪደሮች እና ካርታ",
-    statusPending: "መነሻ በመጠበቅ ላይ",
-    statusInTransit: "በጉዞ ላይ",
-    statusCustoms: "በጉምሩክ ፍተሻ ላይ",
-    statusCleared: "ጉምሩክ የተለቀቀ",
-    statusDelivered: "ደረሷል",
-    modeAir: "የአየር ጭነት ✈️",
-    modeOcean: "የባህር ጭነት 🚢",
-    modeRoad: "የየብስ ትራንስፖርት 🚛",
-    copy: "ቅዳ",
-    copied: "ተቀድቷል!",
-    statusUpdateModal: "የጭነቱን ሁኔታ ያሻሽሉ",
-    currentLocation: "አሁን የሚገኝበት ቦታ",
-    saveChanges: "ለውጦችን አስቀምጥ",
-    resetBtn: "ውሂብ መልስ",
-    documents: "የጭነት ሰነዶች",
-    dutyPaid: "ቀረጥ የተከፈለ",
-    dutyPending: "ቀረጥ በመገምገም ላይ",
-    exempt: "ከቀረጥ ነፃ",
-    waypointLog: "የጉዞ ማቆሚያዎች መዝገብ"
-  }
-};
-
-const DEFAULT_SHIPMENTS = [
-  {
-    id: 'ITMS-8801',
-    mode: 'Ocean',
-    carrier: 'Maersk Line (MSC Line)',
-    voyageFlight: 'V.2409B / MSC Oscar',
-    shipper: 'Ningbo Industrial Exports Ltd, China',
-    consignee: 'BAFS Trading PLC, Addis Ababa',
-    origin: 'Ningbo-Zhoushan Port, China',
-    destination: 'Mojo Dry Port, Ethiopia',
-    status: 'In Transit',
-    currentLocation: 'Bab-el-Mandeb Strait (ባብ ኤል ማነደብ)',
-    cargoDescription: 'Heavy Construction Machinery & Spare Parts',
-    weight: '128 Tons',
-    volume: '4 x 40ft HQ Containers',
-    eta: '2026-10-02',
-    dutyStatus: 'Duty Paid',
-    documents: {
-      bol: 'BL-NGB-ETH-99201',
-      invoice: 'INV-2026-8812',
-      packingList: 'PL-8812-4C',
-      declaration: 'DEC-IM4-2026-901'
-    },
-    waypoints: [
-      { name: 'Ningbo Port, China', time: '2026-09-12', status: 'Completed' },
-      { name: 'Singapore Anchorage', time: '2026-09-18', status: 'Completed' },
-      { name: 'Bab-el-Mandeb Strait', time: '2026-09-24', status: 'Active' },
-      { name: 'Djibouti Container Terminal', time: '2026-09-27', status: 'Pending' },
-      { name: 'Mojo Dry Port, Ethiopia', time: '2026-10-02', status: 'Pending' }
-    ]
-  },
-  {
-    id: 'ITMS-8802',
-    mode: 'Air',
-    carrier: 'Ethiopian Cargo & Logistics Services',
-    voyageFlight: 'ET-361 Freighter B777-F',
-    shipper: 'PharmaTech Europe GmbH, Frankfurt',
-    consignee: 'Ethiopian Pharmaceuticals Supply Service',
-    origin: 'Frankfurt Airport (FRA), Germany',
-    destination: 'Addis Ababa Bole Int. Cargo Hub (ADD)',
-    status: 'Customs Inspection',
-    currentLocation: 'Bole Cargo Cold Chain Terminal',
-    cargoDescription: 'Temperature-Sensitive Medical Vaccines & Reagents',
-    weight: '14.2 Tons',
-    volume: '12 ULD Pallets',
-    eta: '2026-09-26',
-    dutyStatus: 'Duty Exempt',
-    documents: {
-      awb: 'AWB-071-88902143',
-      invoice: 'EUR-INV-9901',
-      packingList: 'PL-MED-2026',
-      declaration: 'DEC-IM4-2026-104'
-    },
-    waypoints: [
-      { name: 'Frankfurt Cargo City', time: '2026-09-24', status: 'Completed' },
-      { name: 'In Flight Transit', time: '2026-09-25', status: 'Completed' },
-      { name: 'Bole Int. Cargo Terminal', time: '2026-09-25', status: 'Active' },
-      { name: 'Customs Release Depot', time: '2026-09-26', status: 'Pending' }
-    ]
-  },
-  {
-    id: 'ITMS-8803',
-    mode: 'Road',
-    carrier: 'BAFS Heavy Transport Fleet',
-    voyageFlight: 'Truck 3-45891 ET / Trailer T-99',
-    shipper: 'Djibouti Port Authority Container Yard',
-    consignee: 'Commercial Bank of Ethiopia (CBE HQ Project)',
-    origin: 'Djibouti Doraleh Multipurpose Port (DMP)',
-    destination: 'Addis Ababa Kality Freight Terminal',
-    status: 'In Transit',
-    currentLocation: 'Awash Arba Weighbridge (አዋሽ አርባ)',
-    cargoDescription: 'Structural Steel Rebar & Beams',
-    weight: '42 Tons',
-    volume: '1 Flatbed Semi-Trailer',
-    eta: '2026-09-27',
-    dutyStatus: 'Duty Assessment Pending',
-    documents: {
-      bol: 'WAYBILL-DJ-ETH-5541',
-      invoice: 'INV-STL-402',
-      packingList: 'PL-STL-01',
-      declaration: 'DEC-IM4-2026-302'
-    },
-    waypoints: [
-      { name: 'Doraleh Port Gate 3', time: '2026-09-23', status: 'Completed' },
-      { name: 'Galafi Border Post', time: '2026-09-24', status: 'Completed' },
-      { name: 'Awash Arba Station', time: '2026-09-25', status: 'Active' },
-      { name: 'Mojo Customs Checkpoint', time: '2026-09-26', status: 'Pending' },
-      { name: 'Kality Terminal, Addis Ababa', time: '2026-09-27', status: 'Pending' }
-    ]
-  },
-  {
-    id: 'ITMS-8804',
-    mode: 'Ocean',
-    carrier: 'CMA CGM Group',
-    voyageFlight: 'V.881A / CMA CGM Antoine',
-    shipper: 'Jebel Ali Free Zone Suppliers, Dubai UAE',
-    consignee: 'Ethiopian Electric Power (EEP)',
-    origin: 'Jebel Ali Port, Dubai, UAE',
-    destination: 'Modjo Dry Port, Ethiopia',
-    status: 'Customs Released',
-    currentLocation: 'Modjo Customs Bonded Warehouse 2',
-    cargoDescription: 'High-Voltage Transformers & Electrical Substation Gear',
-    weight: '85 Tons',
-    volume: '2 Breakbulk Crated Units',
-    eta: '2026-09-24',
-    dutyStatus: 'Duty Paid',
-    documents: {
-      bol: 'BL-DXB-MOD-00912',
-      invoice: 'UAE-EEP-7711',
-      packingList: 'PL-CRATE-02',
-      declaration: 'DEC-IM4-2026-009'
-    },
-    waypoints: [
-      { name: 'Jebel Ali Terminal 2', time: '2026-09-10', status: 'Completed' },
-      { name: 'Port of Djibouti', time: '2026-09-18', status: 'Completed' },
-      { name: 'Modjo Dry Port', time: '2026-09-22', status: 'Completed' },
-      { name: 'Final Offloading Site', time: '2026-09-24', status: 'Completed' }
-    ]
-  }
-];
-
-export default function App() {
-  const [lang, setLang] = useState('en'); // 'en' or 'am'
-  const [activeTab, setActiveTab] = useState('dashboard');
-  const [tgUser, setTgUser] = useState(null);
-  
-  const [shipments, setShipments] = useState(() => {
-    const saved = localStorage.getItem('itms_shipments');
-    return saved ? JSON.parse(saved) : DEFAULT_SHIPMENTS;
-  });
-
-  // Filter & Search states
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('All');
-  const [modeFilter, setModeFilter] = useState('All');
-
-  // Modal states
-  const [selectedShipment, setSelectedShipment] = useState(null);
-  const [statusUpdateOp, setStatusUpdateOp] = useState(null);
-  const [newWaypointInput, setNewWaypointInput] = useState('');
-
-  // Form state for new shipment dispatch
-  const [newShipment, setNewShipment] = useState({
-    mode: 'Ocean',
-    carrier: '',
-    voyageFlight: '',
-    shipper: '',
-    consignee: '',
-    origin: '',
-    destination: '',
-    cargoDescription: '',
-    weight: '',
-    volume: '',
-    eta: '',
-    dutyStatus: 'Duty Paid',
-    docBol: '',
-    docInvoice: '',
-    docPacking: ''
-  });
-
-  const t = TRANSLATIONS[lang];
-
-  useEffect(() => {
-    localStorage.setItem('itms_shipments', JSON.stringify(shipments));
-  }, [shipments]);
-
-  useEffect(() => {
-    // Telegram WebApp Integration
-    if (window.Telegram && window.Telegram.WebApp) {
-      const tg = window.Telegram.WebApp;
-      tg.ready();
-      tg.expand();
-      if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-        setTgUser(tg.initDataUnsafe.user);
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BAFS TRADING PLC - International Transport Management System</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              gold: '#D4AF37',
+              dark: '#0B132B',
+              card: '#1C2541',
+              accent: '#3A506B'
+            }
+          }
+        }
       }
     }
-  }, []);
+  </script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased">
+  <div id="root"></div>
 
-  const triggerHaptic = (type = 'impact', style = 'medium') => {
-    if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
-      if (type === 'impact') {
-        window.Telegram.WebApp.HapticFeedback.impactOccurred(style);
-      } else if (type === 'notification') {
-        window.Telegram.WebApp.HapticFeedback.notificationOccurred(style);
-      }
-    }
-  };
+  <script type="text/babel">
+    const { useState, useEffect, useMemo } = React;
 
-  const stats = useMemo(() => {
-    const total = shipments.length;
-    const active = shipments.filter(s => s.status === 'In Transit' || s.status === 'Awaiting Departure').length;
-    const customs = shipments.filter(s => s.status === 'Customs Inspection').length;
-    const delivered = shipments.filter(s => s.status === 'Customs Released' || s.status === 'Final Delivery').length;
-    
-    const airCount = shipments.filter(s => s.mode === 'Air').length;
-    const oceanCount = shipments.filter(s => s.mode === 'Ocean').length;
-    const roadCount = shipments.filter(s => s.mode === 'Road').length;
-
-    return { total, active, customs, delivered, airCount, oceanCount, roadCount };
-  }, [shipments]);
-
-  const translateStatus = (st) => {
-    switch (st) {
-      case 'Awaiting Departure': return t.statusPending;
-      case 'In Transit': return t.statusInTransit;
-      case 'Customs Inspection': return t.statusCustoms;
-      case 'Customs Released': return t.statusCleared;
-      case 'Final Delivery': return t.statusDelivered;
-      default: return st;
-    }
-  };
-
-  const getModeIcon = (mode) => {
-    switch (mode) {
-      case 'Air': return <Plane size={16} className="text-sky-400" />;
-      case 'Ocean': return <Ship size={16} className="text-blue-400" />;
-      case 'Road': return <Truck size={16} className="text-amber-400" />;
-      default: return <Package size={16} className="text-emerald-400" />;
-    }
-  };
-
-  const handleAddShipment = (e) => {
-    e.preventDefault();
-    if (!newShipment.carrier || !newShipment.origin || !newShipment.destination) {
-      alert(lang === 'am' ? 'እባክዎ ሁሉንም አስፈላጊ መረጃዎች ይሙሉ።' : 'Please complete all essential shipment details.');
-      return;
-    }
-    triggerHaptic('notification', 'success');
-
-    const created = {
-      id: `ITMS-${Math.floor(1000 + Math.random() * 9000)}`,
-      mode: newShipment.mode,
-      carrier: newShipment.carrier,
-      voyageFlight: newShipment.voyageFlight || 'N/A',
-      shipper: newShipment.shipper || 'Global Supplier',
-      consignee: newShipment.consignee || 'BAFS Imports',
-      origin: newShipment.origin,
-      destination: newShipment.destination,
-      status: 'Awaiting Departure',
-      currentLocation: newShipment.origin,
-      cargoDescription: newShipment.cargoDescription || 'General Cargo',
-      weight: newShipment.weight || 'Standard Weight',
-      volume: newShipment.volume || 'Standard CBM',
-      eta: newShipment.eta || new Date().toISOString().split('T')[0],
-      dutyStatus: newShipment.dutyStatus,
-      documents: {
-        bol: newShipment.docBol || `DOC-${Math.floor(100000 + Math.random() * 900000)}`,
-        invoice: newShipment.docInvoice || `INV-${Math.floor(1000 + Math.random() * 9000)}`,
-        packingList: newShipment.docPacking || `PL-${Math.floor(100 + Math.random() * 900)}`,
-        declaration: `DEC-IM4-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`
+    const INITIAL_SHIPMENTS = [
+      {
+        id: "BAFS-INT-9012",
+        mode: "Road",
+        carrier: "BAFS Fleet Ltd",
+        vesselFlight: "Truck 3-54321 ET",
+        origin: "Djibouti Port, DJ",
+        destination: "Modjo Dry Port, ET",
+        consignee: "Mosa Logistics PLC",
+        cargoDescription: "Commercial Machinery & Spare Parts",
+        weightVolume: "28.5 Tons / 40ft HQ",
+        customsStatus: "Customs Cleared",
+        dutyStatus: "Paid",
+        status: "In Transit",
+        eta: "2026-09-28",
+        docs: { blAwb: "DJB-883921", invoice: "INV-2026-091", packingList: "PL-091", originCert: "CO-DJ-102" },
+        waypoints: [
+          { name: "Djibouti Port", done: true },
+          { name: "Galafi Border", done: true },
+          { name: "Semera Checkpoint", done: true },
+          { name: "Modjo Dry Port", done: false }
+        ]
       },
-      waypoints: [
-        { name: newShipment.origin, time: new Date().toISOString().split('T')[0], status: 'Active' },
-        { name: newShipment.destination, time: newShipment.eta || 'Pending', status: 'Pending' }
-      ]
+      {
+        id: "BAFS-INT-9013",
+        mode: "Ocean",
+        carrier: "Maersk Line",
+        vesselFlight: "MV MAERSK ADDIS v.241",
+        origin: "Ningbo Port, CN",
+        destination: "Djibouti Port, DJ",
+        consignee: "BAFS Import Dept",
+        cargoDescription: "Construction Materials & Hardware",
+        weightVolume: "64.0 Tons / 2x40ft FCL",
+        customsStatus: "Documentation Verified",
+        dutyStatus: "Assessment Pending",
+        status: "At Sea",
+        eta: "2026-10-05",
+        docs: { blAwb: "MSK-9012481", invoice: "INV-CN-882", packingList: "PL-882", originCert: "CO-CN-991" },
+        waypoints: [
+          { name: "Ningbo Port", done: true },
+          { name: "Singapore Port", done: true },
+          { name: "Red Sea Passage", done: false },
+          { name: "Djibouti Port", done: false }
+        ]
+      },
+      {
+        id: "BAFS-INT-9014",
+        mode: "Air",
+        carrier: "Ethiopian Cargo",
+        vesselFlight: "ET 3711 (B777-F)",
+        origin: "Guangzhou (CAN), CN",
+        destination: "Addis Ababa (ADD), ET",
+        consignee: "Global Health Solutions",
+        cargoDescription: "Pharmaceuticals & Supplies",
+        weightVolume: "4.2 Tons / 12 Pallets",
+        customsStatus: "Under Customs Clearance",
+        dutyStatus: "Exempted / Priority",
+        status: "Customs Clearance",
+        eta: "2026-09-26",
+        docs: { blAwb: "071-44910283", invoice: "INV-MED-44", packingList: "PL-MED44", originCert: "CO-CN-004" },
+        waypoints: [
+          { name: "Guangzhou Airport", done: true },
+          { name: "In Flight", done: true },
+          { name: "Bole Int'l Customs", done: false },
+          { name: "Final Delivery", done: false }
+        ]
+      }
+    ];
+
+    const TRANSLATIONS = {
+      en: {
+        title: "BAFS TRADING PLC",
+        subtitle: "International Transport & Logistics Management",
+        dash: "Dashboard",
+        shipments: "Global Shipments",
+        customs: "Customs & Docs",
+        newDispatch: "New Dispatch",
+        activeFreight: "Active Shipments",
+        customsCleared: "Customs Cleared",
+        deliveredJobs: "Completed Deliveries",
+        recentShipments: "Live Cargo Tracking",
+        searchPlaceholder: "Search ID, Cargo, Port, Carrier, Waybill...",
+        newShipmentTitle: "Register International Cargo Operation",
+        newShipmentSubtitle: "Dispatch cross-border, ocean, or air freight shipment",
+        mode: "Transport Mode *",
+        carrier: "Carrier / Shipping Line *",
+        vesselFlight: "Vessel / Flight / Truck No. *",
+        origin: "Port of Origin & Country *",
+        destination: "Port of Destination & Country *",
+        consignee: "Consignee / Client Name *",
+        cargoDesc: "Cargo Description & Goods *",
+        weightVol: "Weight & Volume (Tons/TEU) *",
+        blAwbNo: "Bill of Lading / AWB / CMR No. *",
+        submitBtn: "Register & Dispatch Shipment",
+        successMsg: "International shipment registered successfully!",
+        statusInTransit: "In Transit",
+        statusAtSea: "At Sea",
+        statusCustoms: "Customs Clearance",
+        statusDelivered: "Delivered",
+        viewDetails: "Full Tracking Details"
+      },
+      am: {
+        title: "ባፍስ ትሬዲንግ ኃ/የተ/የግ/ማህበር",
+        subtitle: "ዓለም አቀፍ የትራንስፖርት እና ሎጂስቲክስ አስተዳደር",
+        dash: "ዳሽቦርድ",
+        shipments: "ጭነቶች",
+        customs: "ጉምሩክ እና ሰነዶች",
+        newDispatch: "አዲስ ጭነት",
+        activeFreight: "በመንገድ ላይ ያሉ ጭነቶች",
+        customsCleared: "ጉምሩክ የተለቀቁ",
+        deliveredJobs: "የደረሱ ጭነቶች",
+        recentShipments: "የቀጥታ የጭነት ክትትል",
+        searchPlaceholder: "በመታወቂያ ቁጥር፣ በወደብ፣ በማጓጓዣ ፈልግ...",
+        newShipmentTitle: "አዲስ ዓለም አቀፍ የትራንስፖርት ስራ መመዝገቢያ",
+        newShipmentSubtitle: "የየብስ፣ የባህር ወይም የአየር ጭነት መዝግብ",
+        mode: "የማጓጓዣ መንገድ *",
+        carrier: "የማጓጓዣ ኩባንያ *",
+        vesselFlight: "የመርከብ / የበረራ / የመኪና ቁጥር *",
+        origin: "የመነሻ ወደብ እና ሀገር *",
+        destination: "የመድረሻ ወደብ እና ሀገር *",
+        consignee: "ተቀባይ / የደንበኛ ስም *",
+        cargoDesc: "የጭነቱ አይነት እና ዝርዝር *",
+        weightVol: "ክብደት እና መጠን (ቶን / TEU) *",
+        blAwbNo: "የጭነት ሰነድ ቁጥር (BL / AWB) *",
+        submitBtn: "ጭነቱን መዝግብ እና አሰማራ",
+        successMsg: "ዓለም አቀፍ ጭነቱ በስኬት ተመዝግቧል!",
+        statusInTransit: "በመጓጓዝ ላይ",
+        statusAtSea: "በባህር ላይ",
+        statusCustoms: "ጉምሩክ ላይ ያለ",
+        statusDelivered: "ደረሷል",
+        viewDetails: "ሙሉ መረጃ እይ"
+      }
     };
 
-    setShipments([created, ...shipments]);
-    
-    setNewShipment({
-      mode: 'Ocean',
-      carrier: '',
-      voyageFlight: '',
-      shipper: '',
-      consignee: '',
-      origin: '',
-      destination: '',
-      cargoDescription: '',
-      weight: '',
-      volume: '',
-      eta: '',
-      dutyStatus: 'Duty Paid',
-      docBol: '',
-      docInvoice: '',
-      docPacking: ''
-    });
-    setActiveTab('shipments');
-  };
+    function App() {
+      const [lang, setLang] = useState('am');
+      const [activeTab, setActiveTab] = useState('dashboard');
+      const [searchQuery, setSearchQuery] = useState('');
+      const [shipments, setShipments] = useState(INITIAL_SHIPMENTS);
+      const [selectedShipment, setSelectedShipment] = useState(null);
+      const [showToast, setShowToast] = useState(false);
 
-  const handleUpdateStatus = (id, newStatus, newLoc) => {
-    triggerHaptic('impact', 'light');
-    setShipments(shipments.map(op => {
-      if (op.id === id) {
-        let updatedWaypoints = [...op.waypoints];
-        if (newLoc && newLoc.trim() !== '') {
-          updatedWaypoints.push({
-            name: newLoc,
-            time: new Date().toISOString().split('T')[0],
-            status: 'Active'
-          });
+      const [formData, setFormData] = useState({
+        mode: 'Road',
+        carrier: '',
+        vesselFlight: '',
+        origin: '',
+        destination: '',
+        consignee: '',
+        cargoDescription: '',
+        weightVolume: '',
+        blAwb: ''
+      });
+
+      const t = TRANSLATIONS[lang];
+
+      useEffect(() => {
+        if (window.Telegram?.WebApp) {
+          window.Telegram.WebApp.ready();
+          window.Telegram.WebApp.expand();
+        }
+      }, []);
+
+      const filteredShipments = useMemo(() => {
+        if (!searchQuery) return shipments;
+        const q = searchQuery.toLowerCase();
+        return shipments.filter(s => 
+          s.id.toLowerCase().includes(q) ||
+          s.cargoDescription.toLowerCase().includes(q) ||
+          s.origin.toLowerCase().includes(q) ||
+          s.destination.toLowerCase().includes(q) ||
+          s.carrier.toLowerCase().includes(q) ||
+          s.docs.blAwb.toLowerCase().includes(q)
+        );
+      }, [shipments, searchQuery]);
+
+      const handleFormSubmit = (e) => {
+        e.preventDefault();
+        if (!formData.carrier || !formData.origin || !formData.destination) {
+          alert(lang === 'am' ? 'እባክዎን አስፈላጊዎቹን መረጃዎች በሙሉ ይሙሉ!' : 'Please fill in all required fields!');
+          return;
         }
 
-        return { 
-          ...op, 
-          status: newStatus, 
-          currentLocation: newLoc || op.currentLocation,
-          waypoints: updatedWaypoints
+        const newShipment = {
+          id: `BAFS-INT-${Math.floor(1000 + Math.random() * 9000)}`,
+          mode: formData.mode,
+          carrier: formData.carrier,
+          vesselFlight: formData.vesselFlight || 'N/A',
+          origin: formData.origin,
+          destination: formData.destination,
+          consignee: formData.consignee || 'BAFS Logistics',
+          cargoDescription: formData.cargoDescription || 'General Cargo',
+          weightVolume: formData.weightVolume || 'Standard Load',
+          customsStatus: 'Under Declaration',
+          dutyStatus: 'Assessment Pending',
+          status: formData.mode === 'Ocean' ? 'At Sea' : 'In Transit',
+          eta: '2026-10-10',
+          docs: {
+            blAwb: formData.blAwb || `WAY-${Math.floor(100000 + Math.random() * 900000)}`,
+            invoice: 'INV-NEW-01',
+            packingList: 'PL-NEW-01',
+            originCert: 'CO-PENDING'
+          },
+          waypoints: [
+            { name: formData.origin, done: true },
+            { name: 'International Corridor', done: true },
+            { name: 'Customs Terminal', done: false },
+            { name: formData.destination, done: false }
+          ]
         };
-      }
-      return op;
-    }));
-    setStatusUpdateOp(null);
-    setNewWaypointInput('');
-  };
 
-  const handleDeleteShipment = (id) => {
-    if (confirm(lang === 'am' ? 'ይህንን የትራንስፖርት መረጃ ለማስወገድ እርግጠኛ ነዎት?' : 'Are you sure you want to delete this international shipment record?')) {
-      triggerHaptic('notification', 'warning');
-      setShipments(shipments.filter(s => s.id !== id));
-      if (selectedShipment && selectedShipment.id === id) setSelectedShipment(null);
-    }
-  };
+        setShipments([newShipment, ...shipments]);
+        setFormData({
+          mode: 'Road',
+          carrier: '',
+          vesselFlight: '',
+          origin: '',
+          destination: '',
+          consignee: '',
+          cargoDescription: '',
+          weightVolume: '',
+          blAwb: ''
+        });
 
-  const resetDataToDefault = () => {
-    if (confirm(lang === 'am' ? 'ሁሉንም መረጃ ወደ ነባሪው ዓለም አቀፍ መረጃ ለመመለስ ይፈልጋሉ?' : 'Reset all international freight & customs records back to default data?')) {
-      setShipments(DEFAULT_SHIPMENTS);
-      localStorage.removeItem('itms_shipments');
-      triggerHaptic('notification', 'success');
-    }
-  };
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 4000);
+        setActiveTab('shipments');
+      };
 
-  // Filtered Shipment View
-  const filteredShipments = shipments.filter(s => {
-    const matchesSearch = 
-      s.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      s.carrier.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      s.voyageFlight.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      s.destination.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      s.cargoDescription.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesStatus = statusFilter === 'All' || s.status === statusFilter;
-    const matchesMode = modeFilter === 'All' || s.mode === modeFilter;
+      const handleStatusToggle = (id) => {
+        setShipments(shipments.map(s => {
+          if (s.id === id) {
+            const nextStatus = s.status === 'Delivered' ? 'In Transit' : 'Delivered';
+            return { ...s, status: nextStatus };
+          }
+          return s;
+        }));
+      };
 
-    return matchesSearch && matchesStatus && matchesMode;
-  });
-
-  return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans pb-24 select-none">
-      
-      {/* Sticky Global Top Header */}
-      <header className="bg-slate-900/95 backdrop-blur border-b border-slate-800 sticky top-0 z-30 px-4 py-3">
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-500 to-blue-600 flex items-center justify-center font-black text-slate-950 shadow-md shadow-sky-500/20">
-              <Globe className="text-white animate-spin-slow" size={22} />
-            </div>
-            <div>
-              <h1 className="font-bold text-xs sm:text-sm tracking-wider text-slate-100 flex items-center gap-1.5">
-                {t.title}
-                <span className="w-2 h-2 rounded-full bg-sky-400 animate-pulse"></span>
-              </h1>
-              <p className="text-[11px] text-sky-400 font-medium">{t.subtitle}</p>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            {/* Language Toggle Button */}
-            <button
-              onClick={() => {
-                triggerHaptic('impact', 'medium');
-                setLang(lang === 'en' ? 'am' : 'en');
-              }}
-              className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-750 border border-slate-700 px-3 py-1.5 rounded-xl text-xs font-bold text-sky-300 transition active:scale-95 shadow-sm"
-            >
-              <Globe size={14} />
-              <span>{lang === 'en' ? '🇪🇹 አማርኛ' : '🇬🇧 English'}</span>
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Container */}
-      <main className="flex-1 max-w-5xl w-full mx-auto p-4 space-y-4">
-
-        {/* ================= DASHBOARD TAB ================= */}
-        {activeTab === 'dashboard' && (
-          <div className="space-y-4">
-            
-            <div className="bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center justify-between shadow-lg">
+      return (
+        <div class="max-w-md mx-auto min-h-screen pb-20 font-sans bg-slate-950 text-slate-100 flex flex-col justify-between">
+          <div>
+            {/* Header */}
+            <div class="p-4 bg-slate-900 border-b border-slate-800 flex justify-between items-center sticky top-0 z-20 shadow-xl">
               <div>
-                <p className="text-xs font-medium text-slate-400">{t.welcome}</p>
-                <h2 className="text-base sm:text-lg font-bold text-white">
-                  {tgUser ? `ሰላም ${tgUser.first_name} 👋` : t.welcome}
-                </h2>
-                <p className="text-xs text-sky-400 mt-0.5">{t.dashOverview}</p>
+                <h1 class="text-base font-bold text-amber-400 flex items-center gap-2">
+                  🌐 {t.title}
+                </h1>
+                <p class="text-[10px] text-slate-400">{t.subtitle}</p>
               </div>
               <button 
-                onClick={resetDataToDefault}
-                className="p-2 text-xs bg-slate-800 hover:bg-slate-750 text-slate-300 hover:text-white rounded-xl transition border border-slate-700 flex items-center gap-1.5"
-                title="Reset Logistics Data"
+                onClick={() => setLang(lang === 'am' ? 'en' : 'am')}
+                class="px-2.5 py-1 bg-amber-400/10 text-amber-400 text-xs font-bold rounded-lg border border-amber-400/30 hover:bg-amber-400/20 transition"
               >
-                <RefreshCw size={14} />
-                <span className="hidden sm:inline">{t.resetBtn}</span>
+                {lang === 'am' ? '🇬🇧 EN' : '🇪🇹 አማርኛ'}
               </button>
             </div>
 
-            {/* Top KPI Metrics Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div className="bg-slate-900/90 border border-slate-800 p-3.5 rounded-xl shadow-sm">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] text-slate-400 font-medium">{t.activeShipments}</span>
-                  <div className="p-1.5 bg-sky-500/10 text-sky-400 rounded-lg">
-                    <Navigation size={18} />
-                  </div>
-                </div>
-                <p className="text-xl font-extrabold text-sky-400 mt-2">
-                  {stats.active} <span className="text-xs text-slate-500 font-normal">/ {stats.total}</span>
-                </p>
-                <p className="text-[10px] text-slate-400 mt-0.5">International Routes</p>
+            {/* Notification Toast */}
+            {showToast && (
+              <div class="m-4 p-3 bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-bold rounded-xl flex items-center gap-2 shadow-lg animate-bounce">
+                <span>✅</span>
+                <span>{t.successMsg}</span>
               </div>
+            )}
 
-              <div className="bg-slate-900/90 border border-slate-800 p-3.5 rounded-xl shadow-sm">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] text-slate-400 font-medium">{t.customsPending}</span>
-                  <div className="p-1.5 bg-amber-500/10 text-amber-400 rounded-lg">
-                    <FileCheck size={18} />
-                  </div>
-                </div>
-                <p className="text-xl font-extrabold text-amber-400 mt-2">{stats.customs}</p>
-                <p className="text-[10px] text-slate-400 mt-0.5">Port Customs Clearance</p>
-              </div>
+            <div class="p-4 space-y-4">
 
-              <div className="bg-slate-900/90 border border-slate-800 p-3.5 rounded-xl shadow-sm">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] text-slate-400 font-medium">{t.deliveredJobs}</span>
-                  <div className="p-1.5 bg-emerald-500/10 text-emerald-400 rounded-lg">
-                    <CheckCircle2 size={18} />
-                  </div>
-                </div>
-                <p className="text-xl font-extrabold text-emerald-400 mt-2">{stats.delivered}</p>
-                <p className="text-[10px] text-slate-400 mt-0.5">Released & Delivered</p>
-              </div>
-
-              <div className="bg-slate-900/90 border border-slate-800 p-3.5 rounded-xl shadow-sm">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] text-slate-400 font-medium">Multi-Modal Modes</span>
-                  <div className="p-1.5 bg-purple-500/10 text-purple-400 rounded-lg">
-                    <Layers size={18} />
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 mt-2">
-                  <span className="text-xs text-sky-400 font-bold flex items-center gap-1"><Plane size={12} /> {stats.airCount}</span>
-                  <span className="text-xs text-blue-400 font-bold flex items-center gap-1"><Ship size={12} /> {stats.oceanCount}</span>
-                  <span className="text-xs text-amber-400 font-bold flex items-center gap-1"><Truck size={12} /> {stats.roadCount}</span>
-                </div>
-                <p className="text-[10px] text-slate-400 mt-0.5">Air, Ocean & Road</p>
-              </div>
-            </div>
-
-            {/* Quick Dispatch Action Bar */}
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                onClick={() => { triggerHaptic(); setActiveTab('add_shipment'); }}
-                className="flex items-center justify-center space-x-2 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition active:scale-95 text-xs"
-              >
-                <PlusCircle size={18} />
-                <span>{t.dispatchShipment}</span>
-              </button>
-
-              <button
-                onClick={() => { triggerHaptic(); setActiveTab('customs'); }}
-                className="flex items-center justify-center space-x-2 bg-slate-900 hover:bg-slate-800 text-slate-100 font-semibold py-3 px-4 rounded-xl border border-slate-800 transition active:scale-95 text-xs"
-              >
-                <FileText size={18} className="text-sky-400" />
-                <span>{t.navCustoms}</span>
-              </button>
-            </div>
-
-            {/* Recent Freight Operations Section */}
-            <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <h3 className="font-bold text-xs sm:text-sm text-slate-200 flex items-center gap-2">
-                  <Clock size={16} className="text-sky-400" />
-                  {t.recentShipments}
-                </h3>
-                <button 
-                  onClick={() => { triggerHaptic(); setActiveTab('shipments'); }}
-                  className="text-xs text-sky-400 hover:underline flex items-center"
-                >
-                  {t.viewAll} <ChevronRight size={14} />
-                </button>
-              </div>
-
-              <div className="space-y-2.5">
-                {shipments.slice(0, 3).map((ship) => (
-                  <div 
-                    key={ship.id}
-                    onClick={() => { triggerHaptic(); setSelectedShipment(ship); }}
-                    className="p-3 bg-slate-950/70 rounded-xl border border-slate-800 hover:border-sky-500/50 cursor-pointer transition flex items-center justify-between"
-                  >
-                    <div className="space-y-1">
-                      <div className="flex items-center space-x-2">
-                        {getModeIcon(ship.mode)}
-                        <span className="text-xs font-bold text-sky-400">{ship.id}</span>
-                        <span className="text-xs font-semibold text-slate-300">| {ship.carrier}</span>
-                      </div>
-                      <p className="text-xs text-slate-300 font-medium flex items-center gap-1">
-                        <MapPin size={12} className="text-slate-500" />
-                        {ship.origin} <ArrowRight size={10} className="text-slate-600" /> {ship.destination}
+              {/* TAB 1: DASHBOARD */}
+              {activeTab === 'dashboard' && (
+                <div class="space-y-4">
+                  {/* Global Metrics */}
+                  <div class="grid grid-cols-3 gap-2">
+                    <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 text-center">
+                      <p class="text-[9px] text-slate-400 uppercase tracking-wider">{t.activeFreight}</p>
+                      <p class="text-lg font-extrabold text-sky-400 mt-0.5">
+                        {shipments.filter(s => s.status !== 'Delivered').length}
                       </p>
                     </div>
-
-                    <div className="text-right space-y-1">
-                      <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                        ship.status === 'In Transit' ? 'bg-sky-500/20 text-sky-400 border border-sky-500/30' :
-                        ship.status === 'Customs Released' || ship.status === 'Final Delivery' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
-                        ship.status === 'Customs Inspection' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' :
-                        'bg-slate-800 text-slate-400'
-                      }`}>
-                        {translateStatus(ship.status)}
-                      </span>
-                      <p className="text-[10px] text-slate-400">ETA: {ship.eta}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-          </div>
-        )}
-
-        {/* ================= INTERNATIONAL SHIPMENTS LIST TAB ================= */}
-        {activeTab === 'shipments' && (
-          <div className="space-y-4">
-            
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-sm sm:text-base font-bold text-slate-100">{t.shipmentsTitle}</h2>
-                <p className="text-xs text-slate-400">{t.shipmentsSubtitle}</p>
-              </div>
-              <button
-                onClick={() => { triggerHaptic(); setActiveTab('add_shipment'); }}
-                className="bg-sky-500 hover:bg-sky-600 text-slate-950 font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 shadow"
-              >
-                <PlusCircle size={14} />
-                {t.dispatchShipment}
-              </button>
-            </div>
-
-            {/* Search Input & Mode Filters */}
-            <div className="space-y-2">
-              <div className="relative">
-                <Search className="absolute left-3 top-2.5 text-slate-500" size={16} />
-                <input
-                  type="text"
-                  placeholder={t.searchPlaceholder}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-sky-500"
-                />
-              </div>
-
-              <div className="flex flex-wrap gap-1.5">
-                {/* Mode Filter Chips */}
-                {['All', 'Ocean', 'Air', 'Road'].map((md) => (
-                  <button
-                    key={md}
-                    onClick={() => { triggerHaptic('impact', 'light'); setModeFilter(md); }}
-                    className={`px-3 py-1 rounded-lg text-xs font-semibold transition flex items-center gap-1 ${
-                      modeFilter === md
-                        ? 'bg-sky-500 text-slate-950 font-bold'
-                        : 'bg-slate-900 text-slate-400 border border-slate-800 hover:bg-slate-800'
-                    }`}
-                  >
-                    {md === 'Ocean' && <Ship size={12} />}
-                    {md === 'Air' && <Plane size={12} />}
-                    {md === 'Road' && <Truck size={12} />}
-                    {md}
-                  </button>
-                ))}
-
-                <div className="h-4 w-px bg-slate-800 my-auto mx-1"></div>
-
-                {/* Status Filter Chips */}
-                {['All', 'Awaiting Departure', 'In Transit', 'Customs Inspection', 'Customs Released'].map((st) => (
-                  <button
-                    key={st}
-                    onClick={() => { triggerHaptic('impact', 'light'); setStatusFilter(st); }}
-                    className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition ${
-                      statusFilter === st
-                        ? 'bg-slate-700 text-white font-bold'
-                        : 'bg-slate-900/60 text-slate-400 border border-slate-800/80 hover:bg-slate-800'
-                    }`}
-                  >
-                    {st === 'All' ? (lang === 'am' ? 'ሁሉም' : 'All Status') : translateStatus(st)}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Freight Cards List */}
-            <div className="space-y-3">
-              {filteredShipments.map((ship) => (
-                <div 
-                  key={ship.id}
-                  className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 space-y-3 hover:border-sky-500/50 transition shadow-sm"
-                >
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <div className="flex items-center space-x-2">
-                        {getModeIcon(ship.mode)}
-                        <span className="font-extrabold text-sky-400 text-xs sm:text-sm">{ship.id}</span>
-                        <span className="bg-slate-800 text-slate-300 px-2 py-0.5 rounded text-[11px] font-mono font-bold">
-                          {ship.voyageFlight}
-                        </span>
-                      </div>
-                      <p className="text-xs text-slate-200 font-semibold mt-1">
-                        {ship.cargoDescription}
+                    <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 text-center">
+                      <p class="text-[9px] text-slate-400 uppercase tracking-wider">{t.customsCleared}</p>
+                      <p class="text-lg font-extrabold text-purple-400 mt-0.5">
+                        {shipments.filter(s => s.customsStatus === 'Customs Cleared').length}
                       </p>
                     </div>
-
-                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
-                      ship.status === 'In Transit' ? 'bg-sky-500/20 text-sky-400 border border-sky-500/30' :
-                      ship.status === 'Customs Released' || ship.status === 'Final Delivery' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
-                      ship.status === 'Customs Inspection' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' :
-                      'bg-slate-800 text-slate-400'
-                    }`}>
-                      {translateStatus(ship.status)}
-                    </span>
-                  </div>
-
-                  {/* Route Corridor Card */}
-                  <div className="bg-slate-950/80 p-3 rounded-xl border border-slate-800 text-xs space-y-1.5">
-                    <div className="flex items-center justify-between text-slate-300">
-                      <span className="text-slate-500 flex items-center gap-1"><MapPin size={12} /> Corridor:</span>
-                      <span className="font-medium text-slate-200">{ship.origin} ➔ {ship.destination}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-slate-300">
-                      <span className="text-slate-500 flex items-center gap-1"><Building2 size={12} /> Carrier:</span>
-                      <span className="font-medium">{ship.carrier}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-slate-300">
-                      <span className="text-slate-500">{t.currentLocation}:</span>
-                      <span className="font-bold text-sky-300">{ship.currentLocation}</span>
+                    <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 text-center">
+                      <p class="text-[9px] text-slate-400 uppercase tracking-wider">{t.deliveredJobs}</p>
+                      <p class="text-lg font-extrabold text-emerald-400 mt-0.5">
+                        {shipments.filter(s => s.status === 'Delivered').length}
+                      </p>
                     </div>
                   </div>
 
-                  {/* Footer Stats & Actions */}
-                  <div className="flex items-center justify-between pt-1">
-                    <div className="flex items-center gap-3 text-[11px] text-slate-400">
-                      <span>Weight: <strong className="text-slate-200">{ship.weight}</strong></span>
-                      <span>ETA: <strong className="text-sky-400">{ship.eta}</strong></span>
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => { triggerHaptic(); setStatusUpdateOp(ship); }}
-                        className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-750 text-slate-200 text-xs rounded-lg flex items-center gap-1 transition border border-slate-700"
-                      >
-                        <Edit3 size={12} /> Update Status
-                      </button>
-                      <button
-                        onClick={() => { triggerHaptic(); setSelectedShipment(ship); }}
-                        className="px-2.5 py-1.5 bg-sky-500/20 hover:bg-sky-500/30 text-sky-400 border border-sky-500/30 text-xs rounded-lg flex items-center gap-1 transition"
-                      >
-                        Details
-                      </button>
-                      <button
-                        onClick={() => handleDeleteShipment(ship.id)}
-                        className="p-1.5 text-rose-400 hover:bg-rose-500/20 rounded-lg transition"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  </div>
-
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* ================= CUSTOMS & COMPLIANCE TAB ================= */}
-        {activeTab === 'customs' && (
-          <div className="space-y-4">
-            
-            <div className="bg-gradient-to-r from-amber-950/40 via-slate-900 to-slate-900 border border-amber-500/30 rounded-2xl p-4">
-              <h2 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
-                <ShieldCheck size={18} className="text-amber-400" />
-                {t.customsTitle}
-              </h2>
-              <p className="text-xs text-slate-300 mt-0.5">{t.customsSubtitle}</p>
-            </div>
-
-            <div className="space-y-3">
-              {shipments.map((ship) => (
-                <div key={ship.id} className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 space-y-3">
-                  <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
-                    <div className="flex items-center gap-2">
-                      <span className="font-extrabold text-sky-400 text-xs">{ship.id}</span>
-                      <span className="text-xs text-slate-300 font-semibold">{ship.consignee}</span>
-                    </div>
-                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                      ship.dutyStatus === 'Duty Paid' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
-                      ship.dutyStatus === 'Duty Exempt' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' :
-                      'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                    }`}>
-                      {ship.dutyStatus}
-                    </span>
-                  </div>
-
-                  {/* Documents Grid */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-                    <div className="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
-                      <p className="text-[10px] text-slate-500">{ship.mode === 'Air' ? 'Air Waybill (AWB)' : 'Bill of Lading (B/L)'}</p>
-                      <p className="font-mono text-slate-200 font-bold mt-1 text-[11px]">{ship.documents.bol || ship.documents.awb}</p>
-                    </div>
-
-                    <div className="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
-                      <p className="text-[10px] text-slate-500">Commercial Invoice</p>
-                      <p className="font-mono text-slate-200 font-bold mt-1 text-[11px]">{ship.documents.invoice}</p>
-                    </div>
-
-                    <div className="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
-                      <p className="text-[10px] text-slate-500">Packing List</p>
-                      <p className="font-mono text-slate-200 font-bold mt-1 text-[11px]">{ship.documents.packingList}</p>
-                    </div>
-
-                    <div className="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
-                      <p className="text-[10px] text-slate-500">Customs Declaration (IM4)</p>
-                      <p className="font-mono text-sky-400 font-bold mt-1 text-[11px]">{ship.documents.declaration}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1">
-                    <span>Destination Port: <strong className="text-slate-200">{ship.destination}</strong></span>
-                    <button
-                      onClick={() => {
-                        triggerHaptic('notification', 'success');
-                        alert(`Customs Declaration ${ship.documents.declaration} verified & copied!`);
-                      }}
-                      className="px-2.5 py-1 bg-slate-800 hover:bg-slate-750 text-slate-300 rounded-lg flex items-center gap-1 transition"
-                    >
-                      <Copy size={12} /> Verify Declaration
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* ================= REGISTER NEW SHIPMENT TAB ================= */}
-        {activeTab === 'add_shipment' && (
-          <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 space-y-4">
-            
-            <div>
-              <h2 className="text-sm sm:text-base font-bold text-slate-100">{t.dispatchNew}</h2>
-              <p className="text-xs text-slate-400">{t.dispatchSubtitle}</p>
-            </div>
-
-            <form onSubmit={handleAddShipment} className="space-y-3 text-xs">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-slate-300 font-medium mb-1">{t.mode} *</label>
-                  <select
-                    value={newShipment.mode}
-                    onChange={(e) => setNewShipment({ ...newShipment, mode: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-sky-500"
+                  {/* Dispatch Action Button */}
+                  <button 
+                    onClick={() => setActiveTab('new')}
+                    class="w-full py-3 px-4 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold rounded-xl shadow-lg flex justify-between items-center transition"
                   >
-                    <option value="Ocean">{t.modeOcean}</option>
-                    <option value="Air">{t.modeAir}</option>
-                    <option value="Road">{t.modeRoad}</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-slate-300 font-medium mb-1">{t.carrier} *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Maersk, Ethiopian Airlines, BAFS Truck"
-                    value={newShipment.carrier}
-                    onChange={(e) => setNewShipment({ ...newShipment, carrier: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-100 placeholder-slate-600 focus:outline-none focus:border-sky-500"
-                  />
-                </div>
-              </div>
+                    <span class="flex items-center gap-2 text-xs">
+                      ➕ <span>{t.newDispatch}</span>
+                    </span>
+                    <span class="text-xs bg-slate-950/20 px-2 py-0.5 rounded font-mono">GLOBAL DISPATCH +</span>
+                  </button>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-slate-300 font-medium mb-1">{t.voyageFlight}</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Flight ET-361 / Vessel V.240"
-                    value={newShipment.voyageFlight}
-                    onChange={(e) => setNewShipment({ ...newShipment, voyageFlight: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-100 placeholder-slate-600 focus:outline-none focus:border-sky-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-slate-300 font-medium mb-1">{t.dutyTariffStatus}</label>
-                  <select
-                    value={newShipment.dutyStatus}
-                    onChange={(e) => setNewShipment({ ...newShipment, dutyStatus: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-sky-500"
-                  >
-                    <option value="Duty Paid">{t.dutyPaid}</option>
-                    <option value="Duty Assessment Pending">{t.dutyPending}</option>
-                    <option value="Duty Exempt">{t.exempt}</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-slate-300 font-medium mb-1">{t.originPort} *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Ningbo Port, Frankfurt FRA, Djibouti"
-                    value={newShipment.origin}
-                    onChange={(e) => setNewShipment({ ...newShipment, origin: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-100 placeholder-slate-600 focus:outline-none focus:border-sky-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-slate-300 font-medium mb-1">{t.destPort} *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Mojo Dry Port, Bole Cargo Hub"
-                    value={newShipment.destination}
-                    onChange={(e) => setNewShipment({ ...newShipment, destination: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-100 placeholder-slate-600 focus:outline-none focus:border-sky-500"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-slate-300 font-medium mb-1">{t.cargoDescription}</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Medical Supplies, Industrial Machinery, Grain"
-                  value={newShipment.cargoDescription}
-                  onChange={(e) => setNewShipment({ ...newShipment, cargoDescription: e.target.value })}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-100 placeholder-slate-600 focus:outline-none focus:border-sky-500"
-                />
-              </div>
-
-              <div className="grid grid-cols-3 gap-2">
-                <div>
-                  <label className="block text-slate-300 font-medium mb-1">{t.cargoWeight}</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. 24 Tons"
-                    value={newShipment.weight}
-                    onChange={(e) => setNewShipment({ ...newShipment, weight: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-100 placeholder-slate-600 focus:outline-none focus:border-sky-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-slate-300 font-medium mb-1">{t.cargoVolume}</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. 2 x 40ft HQ"
-                    value={newShipment.volume}
-                    onChange={(e) => setNewShipment({ ...newShipment, volume: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-100 placeholder-slate-600 focus:outline-none focus:border-sky-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-slate-300 font-medium mb-1">{t.estimatedArrival}</label>
-                  <input
-                    type="date"
-                    value={newShipment.eta}
-                    onChange={(e) => setNewShipment({ ...newShipment, eta: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-sky-500"
-                  />
-                </div>
-              </div>
-
-              <div className="pt-2">
-                <button
-                  type="submit"
-                  className="w-full bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white font-extrabold py-3 rounded-xl shadow-lg transition active:scale-98 text-xs flex items-center justify-center gap-2"
-                >
-                  <Send size={16} />
-                  {t.confirmDispatch}
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
-
-        {/* ================= CORRIDORS & WAYPOINTS TRACKER TAB ================= */}
-        {activeTab === 'corridors' && (
-          <div className="space-y-4">
-            
-            <div className="bg-gradient-to-r from-blue-900/40 to-slate-900 border border-blue-500/30 rounded-2xl p-4">
-              <h2 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
-                <Compass size={18} className="text-sky-400" />
-                Global Trade Corridors & Waypoint Logs
-              </h2>
-              <p className="text-xs text-slate-300 mt-1">Real-time status across Red Sea, Djibouti Corridor, Air Hubs & Dry Ports</p>
-            </div>
-
-            <div className="space-y-4">
-              {shipments.map((ship) => (
-                <div key={ship.id} className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      {getModeIcon(ship.mode)}
-                      <span className="font-extrabold text-sky-400 text-xs">{ship.id}</span>
-                      <span className="text-xs text-slate-200 font-bold">{ship.carrier}</span>
+                  {/* Live Corridor Activity */}
+                  <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 space-y-3">
+                    <div class="flex justify-between items-center">
+                      <h3 class="text-xs font-bold text-slate-200 uppercase tracking-wider">
+                        {t.recentShipments}
+                      </h3>
+                      <button onClick={() => setActiveTab('shipments')} class="text-[11px] text-amber-400 hover:underline font-semibold">
+                        View All ({shipments.length}) →
+                      </button>
                     </div>
-                    <span className="text-[11px] text-slate-400 font-mono">ETA: {ship.eta}</span>
-                  </div>
 
-                  {/* Waypoint Timeline */}
-                  <div className="pl-2 border-l-2 border-slate-800 space-y-3 ml-2 my-2">
-                    {ship.waypoints.map((wp, idx) => (
-                      <div key={idx} className="relative pl-4 flex items-center justify-between text-xs">
-                        <div className={`absolute -left-[17px] top-1 w-2.5 h-2.5 rounded-full ${
-                          wp.status === 'Completed' ? 'bg-emerald-500 ring-4 ring-emerald-500/20' :
-                          wp.status === 'Active' ? 'bg-sky-400 ring-4 ring-sky-400/30 animate-pulse' :
-                          'bg-slate-700'
-                        }`} />
-                        <div>
-                          <p className={`font-semibold ${wp.status === 'Active' ? 'text-sky-400 font-bold' : 'text-slate-300'}`}>
-                            {wp.name}
-                          </p>
-                          <p className="text-[10px] text-slate-500">{wp.time}</p>
+                    <div class="space-y-2">
+                      {shipments.slice(0, 3).map(s => (
+                        <div 
+                          key={s.id}
+                          onClick={() => setSelectedShipment(s)}
+                          class="p-3 bg-slate-950/80 rounded-xl border border-slate-800/80 hover:border-amber-500/40 transition cursor-pointer flex justify-between items-center text-xs"
+                        >
+                          <div>
+                            <div class="flex items-center gap-2">
+                              <span class="font-mono text-amber-400 font-bold">{s.id}</span>
+                              <span class="text-slate-300 font-semibold">{s.mode === 'Air' ? '✈️ Air' : s.mode === 'Ocean' ? '🚢 Ocean' : '🚛 Road'}</span>
+                            </div>
+                            <p class="text-[11px] text-slate-400 mt-0.5">{s.cargoDescription}</p>
+                            <p class="text-[10px] text-slate-500">{s.origin} ➔ {s.destination}</p>
+                          </div>
+                          <span class={`px-2 py-1 rounded-md text-[10px] font-bold ${
+                            s.status === 'Delivered' ? 'bg-emerald-500/20 text-emerald-400' :
+                            s.status === 'At Sea' ? 'bg-indigo-500/20 text-indigo-400' :
+                            s.status === 'In Transit' ? 'bg-sky-500/20 text-sky-400' :
+                            'bg-purple-500/20 text-purple-400'
+                          }`}>
+                            {s.status}
+                          </span>
                         </div>
-                        <span className={`text-[10px] font-medium px-2 py-0.5 rounded ${
-                          wp.status === 'Completed' ? 'text-emerald-400 bg-emerald-500/10' :
-                          wp.status === 'Active' ? 'text-sky-400 bg-sky-500/10' : 'text-slate-500'
-                        }`}>
-                          {wp.status}
-                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 2: SHIPMENTS LIST */}
+              {activeTab === 'shipments' && (
+                <div class="space-y-3">
+                  <div class="relative">
+                    <input 
+                      type="text"
+                      placeholder={t.searchPlaceholder}
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      class="w-full bg-slate-900 border border-slate-800 rounded-xl py-2.5 px-3 pl-9 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-400 transition"
+                    />
+                    <span class="absolute left-3 top-2.5 text-slate-500 text-xs">🔍</span>
+                  </div>
+
+                  <div class="space-y-2">
+                    {filteredShipments.map(s => (
+                      <div key={s.id} class="p-3.5 bg-slate-900 rounded-xl border border-slate-800 space-y-2.5">
+                        <div class="flex justify-between items-start">
+                          <div>
+                            <div class="flex items-center gap-2">
+                              <span class="text-xs font-mono font-bold text-amber-400">{s.id}</span>
+                              <span class="text-[10px] px-2 py-0.5 bg-slate-800 text-slate-300 rounded font-bold border border-slate-700">
+                                {s.mode === 'Air' ? '✈️ AIR' : s.mode === 'Ocean' ? '🚢 OCEAN' : '🚛 ROAD'}
+                              </span>
+                            </div>
+                            <h4 class="text-xs font-bold text-white mt-1">{s.cargoDescription}</h4>
+                          </div>
+                          <span class={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                            s.status === 'Delivered' ? 'bg-emerald-500/20 text-emerald-400' :
+                            s.status === 'At Sea' ? 'bg-indigo-500/20 text-indigo-400' :
+                            'bg-sky-500/20 text-sky-400'
+                          }`}>
+                            {s.status}
+                          </span>
+                        </div>
+
+                        <div class="text-[11px] text-slate-400 grid grid-cols-2 gap-1 border-t border-slate-800/60 pt-2">
+                          <div>📍 <strong>Route:</strong> {s.origin} ➔ {s.destination}</div>
+                          <div>🛳️ <strong>Carrier:</strong> {s.carrier}</div>
+                          <div>📜 <strong>BL/AWB:</strong> <span class="font-mono text-amber-300">{s.docs.blAwb}</span></div>
+                          <div>⚖️ <strong>Specs:</strong> {s.weightVolume}</div>
+                        </div>
+
+                        {/* Interactive Waypoint Progress */}
+                        <div class="bg-slate-950 p-2.5 rounded-lg border border-slate-800">
+                          <p class="text-[10px] text-slate-400 font-bold mb-1.5 uppercase">Corridor Waypoint Progress</p>
+                          <div class="flex items-center justify-between gap-1">
+                            {s.waypoints.map((wp, i) => (
+                              <div key={i} class="flex-1 flex flex-col items-center text-center">
+                                <div class={`w-3.5 h-3.5 rounded-full text-[8px] flex items-center justify-center font-bold ${
+                                  wp.done ? 'bg-emerald-500 text-slate-950' : 'bg-slate-800 border border-slate-700 text-slate-500'
+                                }`}>
+                                  {wp.done ? '✓' : i + 1}
+                                </div>
+                                <span class="text-[8px] text-slate-400 mt-1 truncate max-w-[60px]">{wp.name}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div class="flex gap-2 pt-1">
+                          <button 
+                            onClick={() => handleStatusToggle(s.id)}
+                            class="flex-1 py-1.5 bg-slate-800 hover:bg-slate-700 text-[10px] font-bold text-slate-300 rounded-lg transition border border-slate-700"
+                          >
+                            🔄 Toggle Delivered Status
+                          </button>
+                          <button 
+                            onClick={() => setSelectedShipment(s)}
+                            class="px-3 py-1.5 bg-amber-400/10 hover:bg-amber-400/20 text-[10px] font-bold text-amber-400 rounded-lg transition border border-amber-400/20"
+                          >
+                            🔍 Full Details
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
                 </div>
-              ))}
+              )}
+
+              {/* TAB 3: CUSTOMS & COMPLIANCE */}
+              {activeTab === 'customs' && (
+                <div class="space-y-3">
+                  <div class="p-3 bg-purple-500/10 border border-purple-500/30 rounded-xl flex justify-between items-center text-xs">
+                    <div>
+                      <p class="font-bold text-purple-300">🛃 International Customs Verification</p>
+                      <p class="text-[10px] text-slate-400 mt-0.5">Bill of Lading, Duty status, and compliance documents</p>
+                    </div>
+                  </div>
+
+                  <div class="space-y-2">
+                    {shipments.map(s => (
+                      <div key={s.id} class="p-3.5 bg-slate-900 rounded-xl border border-slate-800 space-y-2 text-xs">
+                        <div class="flex justify-between items-center">
+                          <span class="font-mono text-amber-400 font-bold">{s.id}</span>
+                          <span class="text-[10px] px-2 py-0.5 bg-purple-500/20 text-purple-300 font-bold rounded">
+                            {s.customsStatus}
+                          </span>
+                        </div>
+                        <p class="font-semibold text-slate-200">{s.cargoDescription}</p>
+                        <div class="grid grid-cols-2 gap-2 text-[11px] bg-slate-950 p-2.5 rounded-lg border border-slate-800 font-mono">
+                          <div>📜 B/L or AWB: <span class="text-amber-300">{s.docs.blAwb}</span></div>
+                          <div>🧾 Invoice: <span class="text-slate-300">{s.docs.invoice}</span></div>
+                          <div>📦 Packing List: <span class="text-slate-300">{s.docs.packingList}</span></div>
+                          <div>🌍 Origin Cert: <span class="text-slate-300">{s.docs.originCert}</span></div>
+                        </div>
+                        <div class="flex justify-between items-center text-[10px] text-slate-400 pt-1">
+                          <span>Duty/Tariff Payment: <strong class="text-emerald-400">{s.dutyStatus}</strong></span>
+                          <span>ETA: <strong class="text-slate-200">{s.eta}</strong></span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 4: NEW DISPATCH FORM */}
+              {activeTab === 'new' && (
+                <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 space-y-4">
+                  <div>
+                    <h2 class="text-sm font-bold text-amber-400 flex items-center gap-2">
+                      🌐 {t.newShipmentTitle}
+                    </h2>
+                    <p class="text-[11px] text-slate-400 mt-0.5">{t.newShipmentSubtitle}</p>
+                  </div>
+
+                  <form onSubmit={handleFormSubmit} class="space-y-3 text-xs">
+                    <div>
+                      <label class="block text-slate-400 mb-1 font-semibold">{t.mode}</label>
+                      <select 
+                        value={formData.mode}
+                        onChange={(e) => setFormData({ ...formData, mode: e.target.value })}
+                        class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-amber-300 focus:outline-none focus:border-amber-400 font-bold"
+                      >
+                        <option value="Road">🚛 Road Transit (Cross-Border Trucking)</option>
+                        <option value="Ocean">🚢 Ocean Freight (Sea Shipping)</option>
+                        <option value="Air">✈️ Air Freight (Express Air Cargo)</option>
+                      </select>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                      <div>
+                        <label class="block text-slate-400 mb-1 font-semibold">{t.carrier}</label>
+                        <input 
+                          type="text" 
+                          required
+                          placeholder="e.g., Maersk / BAFS"
+                          value={formData.carrier}
+                          onChange={(e) => setFormData({ ...formData, carrier: e.target.value })}
+                          class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-white focus:outline-none focus:border-amber-400"
+                        />
+                      </div>
+                      <div>
+                        <label class="block text-slate-400 mb-1 font-semibold">{t.vesselFlight}</label>
+                        <input 
+                          type="text" 
+                          placeholder="Vessel name / Truck plate"
+                          value={formData.vesselFlight}
+                          onChange={(e) => setFormData({ ...formData, vesselFlight: e.target.value })}
+                          class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-white focus:outline-none focus:border-amber-400"
+                        />
+                      </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                      <div>
+                        <label class="block text-slate-400 mb-1 font-semibold">{t.origin}</label>
+                        <input 
+                          type="text" 
+                          required
+                          placeholder="Port/City & Country"
+                          value={formData.origin}
+                          onChange={(e) => setFormData({ ...formData, origin: e.target.value })}
+                          class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-white focus:outline-none focus:border-amber-400"
+                        />
+                      </div>
+                      <div>
+                        <label class="block text-slate-400 mb-1 font-semibold">{t.destination}</label>
+                        <input 
+                          type="text" 
+                          required
+                          placeholder="Port/City & Country"
+                          value={formData.destination}
+                          onChange={(e) => setFormData({ ...formData, destination: e.target.value })}
+                          class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-white focus:outline-none focus:border-amber-400"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label class="block text-slate-400 mb-1 font-semibold">{t.cargoDesc}</label>
+                      <input 
+                        type="text" 
+                        required
+                        placeholder="Description of imported/exported goods"
+                        value={formData.cargoDescription}
+                        onChange={(e) => setFormData({ ...formData, cargoDescription: e.target.value })}
+                        class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-white focus:outline-none focus:border-amber-400"
+                      />
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                      <div>
+                        <label class="block text-slate-400 mb-1 font-semibold">{t.weightVol}</label>
+                        <input 
+                          type="text" 
+                          placeholder="e.g. 24 Tons / 40ft HQ"
+                          value={formData.weightVolume}
+                          onChange={(e) => setFormData({ ...formData, weightVolume: e.target.value })}
+                          class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-white focus:outline-none focus:border-amber-400"
+                        />
+                      </div>
+                      <div>
+                        <label class="block text-slate-400 mb-1 font-semibold">{t.blAwbNo}</label>
+                        <input 
+                          type="text" 
+                          placeholder="Bill of Lading / AWB No."
+                          value={formData.blAwb}
+                          onChange={(e) => setFormData({ ...formData, blAwb: e.target.value })}
+                          class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-white focus:outline-none focus:border-amber-400"
+                        />
+                      </div>
+                    </div>
+
+                    <button 
+                      type="submit"
+                      class="w-full py-3 bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold rounded-xl shadow-lg transition mt-2 text-xs uppercase tracking-wider"
+                    >
+                      🚀 {t.submitBtn}
+                    </button>
+                  </form>
+                </div>
+              )}
+
             </div>
           </div>
-        )}
 
-      </main>
-
-      {/* ================= SHIPMENT DETAILS MODAL ================= */}
-      {selectedShipment && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className="bg-slate-900 border border-slate-800 w-full max-w-lg rounded-t-2xl sm:rounded-2xl p-5 space-y-4 max-h-[85vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <div>
-                <span className="text-xs font-bold text-sky-400">{selectedShipment.id}</span>
-                <h3 className="text-base font-extrabold text-white">{selectedShipment.carrier}</h3>
-              </div>
-              <button 
-                onClick={() => setSelectedShipment(null)}
-                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <div className="space-y-3 text-xs">
-              <div className="grid grid-cols-2 gap-2 bg-slate-950 p-3 rounded-xl border border-slate-800">
-                <div>
-                  <p className="text-slate-500 text-[10px]">Status</p>
-                  <p className="font-bold text-sky-400">{translateStatus(selectedShipment.status)}</p>
+          {/* Details Modal */}
+          {selectedShipment && (
+            <div class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+              <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 max-w-sm w-full space-y-4 shadow-2xl text-xs">
+                <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                  <div>
+                    <span class="text-amber-400 font-mono font-bold">{selectedShipment.id}</span>
+                    <h3 class="text-sm font-bold text-white mt-0.5">{selectedShipment.cargoDescription}</h3>
+                  </div>
+                  <button onClick={() => setSelectedShipment(null)} class="text-slate-400 text-base font-bold">✕</button>
                 </div>
-                <div>
-                  <p className="text-slate-500 text-[10px]">Mode</p>
-                  <p className="font-semibold text-slate-200">{selectedShipment.mode} Freight</p>
+
+                <div class="space-y-2 text-slate-300">
+                  <p>🌐 <strong>Mode:</strong> {selectedShipment.mode}</p>
+                  <p>🛳️ <strong>Carrier:</strong> {selectedShipment.carrier} ({selectedShipment.vesselFlight})</p>
+                  <p>🗺️ <strong>Route:</strong> {selectedShipment.origin} ➔ {selectedShipment.destination}</p>
+                  <p>🏢 <strong>Consignee:</strong> {selectedShipment.consignee}</p>
+                  <p>⚖️ <strong>Specs:</strong> {selectedShipment.weightVolume}</p>
+                  <p>📜 <strong>B/L or AWB:</strong> <span class="font-mono text-amber-300">{selectedShipment.docs.blAwb}</span></p>
+                  <p>🛃 <strong>Customs Status:</strong> {selectedShipment.customsStatus}</p>
+                  <p>💰 <strong>Duty Status:</strong> {selectedShipment.dutyStatus}</p>
+                  <p>📅 <strong>Estimated Arrival (ETA):</strong> {selectedShipment.eta}</p>
                 </div>
-                <div>
-                  <p className="text-slate-500 text-[10px]">{t.currentLocation}</p>
-                  <p className="font-semibold text-slate-200">{selectedShipment.currentLocation}</p>
-                </div>
-                <div>
-                  <p className="text-slate-500 text-[10px]">Estimated ETA</p>
-                  <p className="font-semibold text-slate-200">{selectedShipment.eta}</p>
-                </div>
-              </div>
 
-              <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1">
-                <p className="text-slate-500 text-[10px]">Shipper / Consignee</p>
-                <p className="text-slate-300">From: <strong className="text-slate-100">{selectedShipment.shipper}</strong></p>
-                <p className="text-slate-300">To: <strong className="text-slate-100">{selectedShipment.consignee}</strong></p>
-              </div>
-
-              <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1">
-                <p className="text-slate-500 text-[10px]">Customs Declaration IM4</p>
-                <p className="font-mono font-bold text-sky-400">{selectedShipment.documents.declaration}</p>
-                <p className="text-slate-300 text-[11px]">Duty Status: <span className="font-bold text-emerald-400">{selectedShipment.dutyStatus}</span></p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ================= UPDATE STATUS MODAL ================= */}
-      {statusUpdateOp && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl p-5 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-              <h3 className="font-bold text-sm text-white">Update Milestone ({statusUpdateOp.id})</h3>
-              <button onClick={() => setStatusUpdateOp(null)} className="text-slate-400 hover:text-white">
-                <X size={18} />
-              </button>
-            </div>
-
-            <div className="space-y-3 text-xs">
-              <div>
-                <label className="block text-slate-400 mb-1">Select New Status</label>
-                <select 
-                  id="status-select"
-                  defaultValue={statusUpdateOp.status}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-100 focus:outline-none focus:border-sky-500"
+                <button 
+                  onClick={() => setSelectedShipment(null)}
+                  class="w-full py-2.5 bg-slate-800 text-slate-200 font-bold rounded-xl border border-slate-700"
                 >
-                  <option value="Awaiting Departure">{t.statusPending}</option>
-                  <option value="In Transit">{t.statusInTransit}</option>
-                  <option value="Customs Inspection">{t.statusCustoms}</option>
-                  <option value="Customs Released">{t.statusCleared}</option>
-                  <option value="Final Delivery">{t.statusDelivered}</option>
-                </select>
+                  Close Details
+                </button>
               </div>
-
-              <div>
-                <label className="block text-slate-400 mb-1">New Waypoint / Location</label>
-                <input 
-                  type="text"
-                  id="location-input"
-                  placeholder="e.g. Djibouti Container Depot, Mojo Terminal"
-                  defaultValue={statusUpdateOp.currentLocation}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-100 focus:outline-none focus:border-sky-500"
-                />
-              </div>
-
-              <button
-                onClick={() => {
-                  const selStatus = document.getElementById('status-select').value;
-                  const newLoc = document.getElementById('location-input').value;
-                  handleUpdateStatus(statusUpdateOp.id, selStatus, newLoc);
-                }}
-                className="w-full bg-sky-500 hover:bg-sky-600 text-slate-950 font-bold py-2.5 rounded-xl shadow transition"
-              >
-                {t.saveChanges}
-              </button>
             </div>
+          )}
+
+          {/* Navigation Bar */}
+          <div class="fixed bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur border-t border-slate-800 max-w-md mx-auto flex justify-around p-2 text-xs z-30">
+            <button 
+              onClick={() => setActiveTab('dashboard')}
+              class={`flex-1 py-2 flex flex-col items-center font-bold rounded-xl transition ${activeTab === 'dashboard' ? 'text-amber-400 bg-slate-800/80' : 'text-slate-400 hover:text-slate-200'}`}
+            >
+              📊 <span>{t.dash}</span>
+            </button>
+            <button 
+              onClick={() => setActiveTab('shipments')}
+              class={`flex-1 py-2 flex flex-col items-center font-bold rounded-xl transition ${activeTab === 'shipments' ? 'text-amber-400 bg-slate-800/80' : 'text-slate-400 hover:text-slate-200'}`}
+            >
+              🌐 <span>{t.shipments}</span>
+            </button>
+            <button 
+              onClick={() => setActiveTab('customs')}
+              class={`flex-1 py-2 flex flex-col items-center font-bold rounded-xl transition ${activeTab === 'customs' ? 'text-amber-400 bg-slate-800/80' : 'text-slate-400 hover:text-slate-200'}`}
+            >
+              🛃 <span>{t.customs}</span>
+            </button>
+            <button 
+              onClick={() => setActiveTab('new')}
+              class={`flex-1 py-2 flex flex-col items-center font-bold rounded-xl transition ${activeTab === 'new' ? 'text-amber-400 bg-slate-800/80' : 'text-slate-400 hover:text-slate-200'}`}
+            >
+              ➕ <span>{t.newDispatch}</span>
+            </button>
           </div>
         </div>
-      )}
+      );
+    }
 
-      {/* ================= BOTTOM NAVIGATION BAR ================= */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur border-t border-slate-800 px-2 py-2 z-40">
-        <div className="max-w-md mx-auto grid grid-cols-5 gap-1">
-          <button
-            onClick={() => { triggerHaptic('impact', 'light'); setActiveTab('dashboard'); }}
-            className={`flex flex-col items-center justify-center py-1 rounded-xl transition ${
-              activeTab === 'dashboard' ? 'text-sky-400 font-bold bg-slate-800/80' : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <Globe size={18} />
-            <span className="text-[10px] mt-1">{t.navDashboard}</span>
-          </button>
-
-          <button
-            onClick={() => { triggerHaptic('impact', 'light'); setActiveTab('shipments'); }}
-            className={`flex flex-col items-center justify-center py-1 rounded-xl transition ${
-              activeTab === 'shipments' ? 'text-sky-400 font-bold bg-slate-800/80' : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <Package size={18} />
-            <span className="text-[10px] mt-1">{t.navShipments}</span>
-          </button>
-
-          <button
-            onClick={() => { triggerHaptic('impact', 'light'); setActiveTab('customs'); }}
-            className={`flex flex-col items-center justify-center py-1 rounded-xl transition ${
-              activeTab === 'customs' ? 'text-sky-400 font-bold bg-slate-800/80' : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <FileText size={18} />
-            <span className="text-[10px] mt-1">{t.navCustoms}</span>
-          </button>
-
-          <button
-            onClick={() => { triggerHaptic('impact', 'light'); setActiveTab('add_shipment'); }}
-            className={`flex flex-col items-center justify-center py-1 rounded-xl transition ${
-              activeTab === 'add_shipment' ? 'text-sky-400 font-bold bg-slate-800/80' : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <PlusCircle size={18} />
-            <span className="text-[10px] mt-1">{t.navDispatch}</span>
-          </button>
-
-          <button
-            onClick={() => { triggerHaptic('impact', 'light'); setActiveTab('corridors'); }}
-            className={`flex flex-col items-center justify-center py-1 rounded-xl transition ${
-              activeTab === 'corridors' ? 'text-sky-400 font-bold bg-slate-800/80' : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <Compass size={18} />
-            <span className="text-[10px] mt-1">Corridors</span>
-          </button>
-        </div>
-      </nav>
-
-    </div>
-  );
-}
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
