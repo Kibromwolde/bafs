@@ -1,685 +1,247 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BAFS TRADING PLC - International Transport Management System</title>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            brand: {
-              gold: '#D4AF37',
-              dark: '#0B132B',
-              card: '#1C2541',
-              accent: '#3A506B'
-            }
-          }
-        }
-      }
-    }
-  </script>
-</head>
-<body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased">
-  <div id="root"></div>
+import React, { useState } from 'react';
+import { 
+  Truck, 
+  MapPin, 
+  CreditCard, 
+  FileSpreadsheet, 
+  CheckCircle2, 
+  AlertTriangle, 
+  Clock, 
+  ArrowUpRight,
+  ShieldCheck,
+  Search,
+  Download
+} from 'lucide-react';
 
-  <script type="text/babel">
-    const { useState, useEffect, useMemo } = React;
+export default function EthioGlobalTMS() {
+  const [activeTab, setActiveTab] = useState('corridor');
+  const [bulkPayments, setBulkPayments] = useState([
+    { creditAccount: '1000010277427', amount: 10550.00, recipient: 'Abebe Bikila (Driver)', status: 'Verified' },
+    { creditAccount: '1000010277427', amount: 11545.69, recipient: 'Abebe Bikila (Per-Diem)', status: 'Verified' },
+    { creditAccount: '1000010277427', amount: 45500.18, recipient: 'Abebe Bikila (Fuel Top-up)', status: 'Verified' },
+    { creditAccount: '1000591321707', amount: 11000.00, recipient: 'Kebede Tassew (Allowance)', status: 'Verified' },
+    { creditAccount: '1000597909512', amount: 24000.34, recipient: 'Almaz Ayana Transport', status: 'Pending' },
+    { creditAccount: '1000390460345', amount: 18000.24, recipient: 'Mojo Logistics Partner', status: 'Verified' },
+  ]);
 
-    const INITIAL_SHIPMENTS = [
-      {
-        id: "BAFS-INT-9012",
-        mode: "Road",
-        carrier: "BAFS Fleet Ltd",
-        vesselFlight: "Truck 3-54321 ET",
-        origin: "Djibouti Port, DJ",
-        destination: "Modjo Dry Port, ET",
-        consignee: "Mosa Logistics PLC",
-        cargoDescription: "Commercial Machinery & Spare Parts",
-        weightVolume: "28.5 Tons / 40ft HQ",
-        customsStatus: "Customs Cleared",
-        dutyStatus: "Paid",
-        status: "In Transit",
-        eta: "2026-09-28",
-        docs: { blAwb: "DJB-883921", invoice: "INV-2026-091", packingList: "PL-091", originCert: "CO-DJ-102" },
-        waypoints: [
-          { name: "Djibouti Port", done: true },
-          { name: "Galafi Border", done: true },
-          { name: "Semera Checkpoint", done: true },
-          { name: "Modjo Dry Port", done: false }
-        ]
-      },
-      {
-        id: "BAFS-INT-9013",
-        mode: "Ocean",
-        carrier: "Maersk Line",
-        vesselFlight: "MV MAERSK ADDIS v.241",
-        origin: "Ningbo Port, CN",
-        destination: "Djibouti Port, DJ",
-        consignee: "BAFS Import Dept",
-        cargoDescription: "Construction Materials & Hardware",
-        weightVolume: "64.0 Tons / 2x40ft FCL",
-        customsStatus: "Documentation Verified",
-        dutyStatus: "Assessment Pending",
-        status: "At Sea",
-        eta: "2026-10-05",
-        docs: { blAwb: "MSK-9012481", invoice: "INV-CN-882", packingList: "PL-882", originCert: "CO-CN-991" },
-        waypoints: [
-          { name: "Ningbo Port", done: true },
-          { name: "Singapore Port", done: true },
-          { name: "Red Sea Passage", done: false },
-          { name: "Djibouti Port", done: false }
-        ]
-      },
-      {
-        id: "BAFS-INT-9014",
-        mode: "Air",
-        carrier: "Ethiopian Cargo",
-        vesselFlight: "ET 3711 (B777-F)",
-        origin: "Guangzhou (CAN), CN",
-        destination: "Addis Ababa (ADD), ET",
-        consignee: "Global Health Solutions",
-        cargoDescription: "Pharmaceuticals & Supplies",
-        weightVolume: "4.2 Tons / 12 Pallets",
-        customsStatus: "Under Customs Clearance",
-        dutyStatus: "Exempted / Priority",
-        status: "Customs Clearance",
-        eta: "2026-09-26",
-        docs: { blAwb: "071-44910283", invoice: "INV-MED-44", packingList: "PL-MED44", originCert: "CO-CN-004" },
-        waypoints: [
-          { name: "Guangzhou Airport", done: true },
-          { name: "In Flight", done: true },
-          { name: "Bole Int'l Customs", done: false },
-          { name: "Final Delivery", done: false }
-        ]
-      }
-    ];
+  const shipments = [
+    { id: 'WB-2026-901', driver: 'Mulugeta Tesfaye', vehicle: '3-ET-34211', cargo: 'Fertilizer (30 Tons)', origin: 'Port of Djibouti', dest: 'Mojo Dry Port', status: 'In Transit', checkpoint: 'Galafi Border', eta: 'Today, 18:00 EAT' },
+    { id: 'WB-2026-902', driver: 'Dawit Getachew', vehicle: '3-ET-11892', cargo: 'Industrial Machinery', origin: 'Mojo Dry Port', dest: 'Hawassa Industrial Park', status: 'Customs Hold', checkpoint: 'Awash Checkpoint', eta: 'Tomorrow, 10:00 EAT' },
+    { id: 'WB-2026-903', driver: 'Sintayehu Haile', vehicle: '3-ET-99012', cargo: 'Commercial Goods', origin: 'Semera', dest: 'Addis Ababa (Kaliti)', status: 'On Schedule', checkpoint: 'Metehara', eta: 'Today, 21:30 EAT' }
+  ];
 
-    const TRANSLATIONS = {
-      en: {
-        title: "BAFS TRADING PLC",
-        subtitle: "International Transport & Logistics Management",
-        dash: "Dashboard",
-        shipments: "Global Shipments",
-        customs: "Customs & Docs",
-        newDispatch: "New Dispatch",
-        activeFreight: "Active Shipments",
-        customsCleared: "Customs Cleared",
-        deliveredJobs: "Completed Deliveries",
-        recentShipments: "Live Cargo Tracking",
-        searchPlaceholder: "Search ID, Cargo, Port, Carrier, Waybill...",
-        newShipmentTitle: "Register International Cargo Operation",
-        newShipmentSubtitle: "Dispatch cross-border, ocean, or air freight shipment",
-        mode: "Transport Mode *",
-        carrier: "Carrier / Shipping Line *",
-        vesselFlight: "Vessel / Flight / Truck No. *",
-        origin: "Port of Origin & Country *",
-        destination: "Port of Destination & Country *",
-        consignee: "Consignee / Client Name *",
-        cargoDesc: "Cargo Description & Goods *",
-        weightVol: "Weight & Volume (Tons/TEU) *",
-        blAwbNo: "Bill of Lading / AWB / CMR No. *",
-        submitBtn: "Register & Dispatch Shipment",
-        successMsg: "International shipment registered successfully!",
-        statusInTransit: "In Transit",
-        statusAtSea: "At Sea",
-        statusCustoms: "Customs Clearance",
-        statusDelivered: "Delivered",
-        viewDetails: "Full Tracking Details"
-      },
-      am: {
-        title: "ባፍስ ትሬዲንግ ኃ/የተ/የግ/ማህበር",
-        subtitle: "ዓለም አቀፍ የትራንስፖርት እና ሎጂስቲክስ አስተዳደር",
-        dash: "ዳሽቦርድ",
-        shipments: "ጭነቶች",
-        customs: "ጉምሩክ እና ሰነዶች",
-        newDispatch: "አዲስ ጭነት",
-        activeFreight: "በመንገድ ላይ ያሉ ጭነቶች",
-        customsCleared: "ጉምሩክ የተለቀቁ",
-        deliveredJobs: "የደረሱ ጭነቶች",
-        recentShipments: "የቀጥታ የጭነት ክትትል",
-        searchPlaceholder: "በመታወቂያ ቁጥር፣ በወደብ፣ በማጓጓዣ ፈልግ...",
-        newShipmentTitle: "አዲስ ዓለም አቀፍ የትራንስፖርት ስራ መመዝገቢያ",
-        newShipmentSubtitle: "የየብስ፣ የባህር ወይም የአየር ጭነት መዝግብ",
-        mode: "የማጓጓዣ መንገድ *",
-        carrier: "የማጓጓዣ ኩባንያ *",
-        vesselFlight: "የመርከብ / የበረራ / የመኪና ቁጥር *",
-        origin: "የመነሻ ወደብ እና ሀገር *",
-        destination: "የመድረሻ ወደብ እና ሀገር *",
-        consignee: "ተቀባይ / የደንበኛ ስም *",
-        cargoDesc: "የጭነቱ አይነት እና ዝርዝር *",
-        weightVol: "ክብደት እና መጠን (ቶን / TEU) *",
-        blAwbNo: "የጭነት ሰነድ ቁጥር (BL / AWB) *",
-        submitBtn: "ጭነቱን መዝግብ እና አሰማራ",
-        successMsg: "ዓለም አቀፍ ጭነቱ በስኬት ተመዝግቧል!",
-        statusInTransit: "በመጓጓዝ ላይ",
-        statusAtSea: "በባህር ላይ",
-        statusCustoms: "ጉምሩክ ላይ ያለ",
-        statusDelivered: "ደረሷል",
-        viewDetails: "ሙሉ መረጃ እይ"
-      }
-    };
+  const totalDisbursement = bulkPayments.reduce((acc, curr) => acc + curr.amount, 0);
 
-    function App() {
-      const [lang, setLang] = useState('am');
-      const [activeTab, setActiveTab] = useState('dashboard');
-      const [searchQuery, setSearchQuery] = useState('');
-      const [shipments, setShipments] = useState(INITIAL_SHIPMENTS);
-      const [selectedShipment, setSelectedShipment] = useState(null);
-      const [showToast, setShowToast] = useState(false);
-
-      const [formData, setFormData] = useState({
-        mode: 'Road',
-        carrier: '',
-        vesselFlight: '',
-        origin: '',
-        destination: '',
-        consignee: '',
-        cargoDescription: '',
-        weightVolume: '',
-        blAwb: ''
-      });
-
-      const t = TRANSLATIONS[lang];
-
-      useEffect(() => {
-        if (window.Telegram?.WebApp) {
-          window.Telegram.WebApp.ready();
-          window.Telegram.WebApp.expand();
-        }
-      }, []);
-
-      const filteredShipments = useMemo(() => {
-        if (!searchQuery) return shipments;
-        const q = searchQuery.toLowerCase();
-        return shipments.filter(s => 
-          s.id.toLowerCase().includes(q) ||
-          s.cargoDescription.toLowerCase().includes(q) ||
-          s.origin.toLowerCase().includes(q) ||
-          s.destination.toLowerCase().includes(q) ||
-          s.carrier.toLowerCase().includes(q) ||
-          s.docs.blAwb.toLowerCase().includes(q)
-        );
-      }, [shipments, searchQuery]);
-
-      const handleFormSubmit = (e) => {
-        e.preventDefault();
-        if (!formData.carrier || !formData.origin || !formData.destination) {
-          alert(lang === 'am' ? 'እባክዎን አስፈላጊዎቹን መረጃዎች በሙሉ ይሙሉ!' : 'Please fill in all required fields!');
-          return;
-        }
-
-        const newShipment = {
-          id: `BAFS-INT-${Math.floor(1000 + Math.random() * 9000)}`,
-          mode: formData.mode,
-          carrier: formData.carrier,
-          vesselFlight: formData.vesselFlight || 'N/A',
-          origin: formData.origin,
-          destination: formData.destination,
-          consignee: formData.consignee || 'BAFS Logistics',
-          cargoDescription: formData.cargoDescription || 'General Cargo',
-          weightVolume: formData.weightVolume || 'Standard Load',
-          customsStatus: 'Under Declaration',
-          dutyStatus: 'Assessment Pending',
-          status: formData.mode === 'Ocean' ? 'At Sea' : 'In Transit',
-          eta: '2026-10-10',
-          docs: {
-            blAwb: formData.blAwb || `WAY-${Math.floor(100000 + Math.random() * 900000)}`,
-            invoice: 'INV-NEW-01',
-            packingList: 'PL-NEW-01',
-            originCert: 'CO-PENDING'
-          },
-          waypoints: [
-            { name: formData.origin, done: true },
-            { name: 'International Corridor', done: true },
-            { name: 'Customs Terminal', done: false },
-            { name: formData.destination, done: false }
-          ]
-        };
-
-        setShipments([newShipment, ...shipments]);
-        setFormData({
-          mode: 'Road',
-          carrier: '',
-          vesselFlight: '',
-          origin: '',
-          destination: '',
-          consignee: '',
-          cargoDescription: '',
-          weightVolume: '',
-          blAwb: ''
-        });
-
-        setShowToast(true);
-        setTimeout(() => setShowToast(false), 4000);
-        setActiveTab('shipments');
-      };
-
-      const handleStatusToggle = (id) => {
-        setShipments(shipments.map(s => {
-          if (s.id === id) {
-            const nextStatus = s.status === 'Delivered' ? 'In Transit' : 'Delivered';
-            return { ...s, status: nextStatus };
-          }
-          return s;
-        }));
-      };
-
-      return (
-        <div class="max-w-md mx-auto min-h-screen pb-20 font-sans bg-slate-950 text-slate-100 flex flex-col justify-between">
+  return (
+    <div className="min-h-screen bg-slate-900 text-slate-100 font-sans flex flex-col">
+      {/* Top Header */}
+      <header className="bg-slate-800 border-b border-slate-700 px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <div className="bg-blue-600 p-2 rounded-lg">
+            <Truck className="h-6 w-6 text-white" />
+          </div>
           <div>
-            {/* Header */}
-            <div class="p-4 bg-slate-900 border-b border-slate-800 flex justify-between items-center sticky top-0 z-20 shadow-xl">
-              <div>
-                <h1 class="text-base font-bold text-amber-400 flex items-center gap-2">
-                  🌐 {t.title}
-                </h1>
-                <p class="text-[10px] text-slate-400">{t.subtitle}</p>
-              </div>
-              <button 
-                onClick={() => setLang(lang === 'am' ? 'en' : 'am')}
-                class="px-2.5 py-1 bg-amber-400/10 text-amber-400 text-xs font-bold rounded-lg border border-amber-400/30 hover:bg-amber-400/20 transition"
-              >
-                {lang === 'am' ? '🇬🇧 EN' : '🇪🇹 አማርኛ'}
-              </button>
+            <h1 className="text-xl font-bold tracking-wide">EthioTrans GTMS</h1>
+            <p className="text-xs text-slate-400">Global Transport Management • Horn of Africa Corridor</p>
+          </div>
+        </div>
+        <div className="flex items-center space-x-4">
+          <span className="bg-emerald-500/10 text-emerald-400 text-xs px-3 py-1.5 rounded-full font-mono border border-emerald-500/20 flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            CBE / Telebirr Host-to-Host Connected
+          </span>
+          <div className="text-right">
+            <p className="text-sm font-medium">Addis Ababa HQ</p>
+            <p className="text-xs text-slate-400">25 Meskerem 2019 EC</p>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Container */}
+      <div className="flex-1 flex">
+        {/* Sidebar */}
+        <aside className="w-64 bg-slate-800/50 border-r border-slate-700 p-4 flex flex-col justify-between">
+          <nav className="space-y-1">
+            <button 
+              onClick={() => setActiveTab('corridor')}
+              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition ${activeTab === 'corridor' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'}`}
+            >
+              <MapPin className="h-4 w-4" />
+              <span>Djibouti Corridor</span>
+            </button>
+            <button 
+              onClick={() => setActiveTab('bulk-bafs')}
+              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition ${activeTab === 'bulk-bafs' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'}`}
+            >
+              <FileSpreadsheet className="h-4 w-4" />
+              <span>BAFS Bulk Payouts</span>
+            </button>
+            <button 
+              onClick={() => setActiveTab('fleet')}
+              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition ${activeTab === 'fleet' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'}`}
+            >
+              <Truck className="h-4 w-4" />
+              <span>Fleet Telematics</span>
+            </button>
+          </nav>
+          
+          <div className="bg-slate-800 p-3 rounded-lg border border-slate-700">
+            <div className="flex items-center space-x-2 text-xs text-amber-400 font-semibold mb-1">
+              <AlertTriangle className="h-4 w-4" />
+              <span>Galafi Border Queue</span>
             </div>
+            <p className="text-xs text-slate-400">Average border clearance delay: 3.5 hrs. Customs server operating normally.</p>
+          </div>
+        </aside>
 
-            {/* Notification Toast */}
-            {showToast && (
-              <div class="m-4 p-3 bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-bold rounded-xl flex items-center gap-2 shadow-lg animate-bounce">
-                <span>✅</span>
-                <span>{t.successMsg}</span>
-              </div>
-            )}
-
-            <div class="p-4 space-y-4">
-
-              {/* TAB 1: DASHBOARD */}
-              {activeTab === 'dashboard' && (
-                <div class="space-y-4">
-                  {/* Global Metrics */}
-                  <div class="grid grid-cols-3 gap-2">
-                    <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 text-center">
-                      <p class="text-[9px] text-slate-400 uppercase tracking-wider">{t.activeFreight}</p>
-                      <p class="text-lg font-extrabold text-sky-400 mt-0.5">
-                        {shipments.filter(s => s.status !== 'Delivered').length}
-                      </p>
-                    </div>
-                    <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 text-center">
-                      <p class="text-[9px] text-slate-400 uppercase tracking-wider">{t.customsCleared}</p>
-                      <p class="text-lg font-extrabold text-purple-400 mt-0.5">
-                        {shipments.filter(s => s.customsStatus === 'Customs Cleared').length}
-                      </p>
-                    </div>
-                    <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 text-center">
-                      <p class="text-[9px] text-slate-400 uppercase tracking-wider">{t.deliveredJobs}</p>
-                      <p class="text-lg font-extrabold text-emerald-400 mt-0.5">
-                        {shipments.filter(s => s.status === 'Delivered').length}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Dispatch Action Button */}
-                  <button 
-                    onClick={() => setActiveTab('new')}
-                    class="w-full py-3 px-4 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold rounded-xl shadow-lg flex justify-between items-center transition"
-                  >
-                    <span class="flex items-center gap-2 text-xs">
-                      ➕ <span>{t.newDispatch}</span>
-                    </span>
-                    <span class="text-xs bg-slate-950/20 px-2 py-0.5 rounded font-mono">GLOBAL DISPATCH +</span>
-                  </button>
-
-                  {/* Live Corridor Activity */}
-                  <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 space-y-3">
-                    <div class="flex justify-between items-center">
-                      <h3 class="text-xs font-bold text-slate-200 uppercase tracking-wider">
-                        {t.recentShipments}
-                      </h3>
-                      <button onClick={() => setActiveTab('shipments')} class="text-[11px] text-amber-400 hover:underline font-semibold">
-                        View All ({shipments.length}) →
-                      </button>
-                    </div>
-
-                    <div class="space-y-2">
-                      {shipments.slice(0, 3).map(s => (
-                        <div 
-                          key={s.id}
-                          onClick={() => setSelectedShipment(s)}
-                          class="p-3 bg-slate-950/80 rounded-xl border border-slate-800/80 hover:border-amber-500/40 transition cursor-pointer flex justify-between items-center text-xs"
-                        >
-                          <div>
-                            <div class="flex items-center gap-2">
-                              <span class="font-mono text-amber-400 font-bold">{s.id}</span>
-                              <span class="text-slate-300 font-semibold">{s.mode === 'Air' ? '✈️ Air' : s.mode === 'Ocean' ? '🚢 Ocean' : '🚛 Road'}</span>
-                            </div>
-                            <p class="text-[11px] text-slate-400 mt-0.5">{s.cargoDescription}</p>
-                            <p class="text-[10px] text-slate-500">{s.origin} ➔ {s.destination}</p>
-                          </div>
-                          <span class={`px-2 py-1 rounded-md text-[10px] font-bold ${
-                            s.status === 'Delivered' ? 'bg-emerald-500/20 text-emerald-400' :
-                            s.status === 'At Sea' ? 'bg-indigo-500/20 text-indigo-400' :
-                            s.status === 'In Transit' ? 'bg-sky-500/20 text-sky-400' :
-                            'bg-purple-500/20 text-purple-400'
-                          }`}>
-                            {s.status}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* TAB 2: SHIPMENTS LIST */}
-              {activeTab === 'shipments' && (
-                <div class="space-y-3">
-                  <div class="relative">
-                    <input 
-                      type="text"
-                      placeholder={t.searchPlaceholder}
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      class="w-full bg-slate-900 border border-slate-800 rounded-xl py-2.5 px-3 pl-9 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-400 transition"
-                    />
-                    <span class="absolute left-3 top-2.5 text-slate-500 text-xs">🔍</span>
-                  </div>
-
-                  <div class="space-y-2">
-                    {filteredShipments.map(s => (
-                      <div key={s.id} class="p-3.5 bg-slate-900 rounded-xl border border-slate-800 space-y-2.5">
-                        <div class="flex justify-between items-start">
-                          <div>
-                            <div class="flex items-center gap-2">
-                              <span class="text-xs font-mono font-bold text-amber-400">{s.id}</span>
-                              <span class="text-[10px] px-2 py-0.5 bg-slate-800 text-slate-300 rounded font-bold border border-slate-700">
-                                {s.mode === 'Air' ? '✈️ AIR' : s.mode === 'Ocean' ? '🚢 OCEAN' : '🚛 ROAD'}
-                              </span>
-                            </div>
-                            <h4 class="text-xs font-bold text-white mt-1">{s.cargoDescription}</h4>
-                          </div>
-                          <span class={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                            s.status === 'Delivered' ? 'bg-emerald-500/20 text-emerald-400' :
-                            s.status === 'At Sea' ? 'bg-indigo-500/20 text-indigo-400' :
-                            'bg-sky-500/20 text-sky-400'
-                          }`}>
-                            {s.status}
-                          </span>
-                        </div>
-
-                        <div class="text-[11px] text-slate-400 grid grid-cols-2 gap-1 border-t border-slate-800/60 pt-2">
-                          <div>📍 <strong>Route:</strong> {s.origin} ➔ {s.destination}</div>
-                          <div>🛳️ <strong>Carrier:</strong> {s.carrier}</div>
-                          <div>📜 <strong>BL/AWB:</strong> <span class="font-mono text-amber-300">{s.docs.blAwb}</span></div>
-                          <div>⚖️ <strong>Specs:</strong> {s.weightVolume}</div>
-                        </div>
-
-                        {/* Interactive Waypoint Progress */}
-                        <div class="bg-slate-950 p-2.5 rounded-lg border border-slate-800">
-                          <p class="text-[10px] text-slate-400 font-bold mb-1.5 uppercase">Corridor Waypoint Progress</p>
-                          <div class="flex items-center justify-between gap-1">
-                            {s.waypoints.map((wp, i) => (
-                              <div key={i} class="flex-1 flex flex-col items-center text-center">
-                                <div class={`w-3.5 h-3.5 rounded-full text-[8px] flex items-center justify-center font-bold ${
-                                  wp.done ? 'bg-emerald-500 text-slate-950' : 'bg-slate-800 border border-slate-700 text-slate-500'
-                                }`}>
-                                  {wp.done ? '✓' : i + 1}
-                                </div>
-                                <span class="text-[8px] text-slate-400 mt-1 truncate max-w-[60px]">{wp.name}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-
-                        <div class="flex gap-2 pt-1">
-                          <button 
-                            onClick={() => handleStatusToggle(s.id)}
-                            class="flex-1 py-1.5 bg-slate-800 hover:bg-slate-700 text-[10px] font-bold text-slate-300 rounded-lg transition border border-slate-700"
-                          >
-                            🔄 Toggle Delivered Status
-                          </button>
-                          <button 
-                            onClick={() => setSelectedShipment(s)}
-                            class="px-3 py-1.5 bg-amber-400/10 hover:bg-amber-400/20 text-[10px] font-bold text-amber-400 rounded-lg transition border border-amber-400/20"
-                          >
-                            🔍 Full Details
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* TAB 3: CUSTOMS & COMPLIANCE */}
-              {activeTab === 'customs' && (
-                <div class="space-y-3">
-                  <div class="p-3 bg-purple-500/10 border border-purple-500/30 rounded-xl flex justify-between items-center text-xs">
-                    <div>
-                      <p class="font-bold text-purple-300">🛃 International Customs Verification</p>
-                      <p class="text-[10px] text-slate-400 mt-0.5">Bill of Lading, Duty status, and compliance documents</p>
-                    </div>
-                  </div>
-
-                  <div class="space-y-2">
-                    {shipments.map(s => (
-                      <div key={s.id} class="p-3.5 bg-slate-900 rounded-xl border border-slate-800 space-y-2 text-xs">
-                        <div class="flex justify-between items-center">
-                          <span class="font-mono text-amber-400 font-bold">{s.id}</span>
-                          <span class="text-[10px] px-2 py-0.5 bg-purple-500/20 text-purple-300 font-bold rounded">
-                            {s.customsStatus}
-                          </span>
-                        </div>
-                        <p class="font-semibold text-slate-200">{s.cargoDescription}</p>
-                        <div class="grid grid-cols-2 gap-2 text-[11px] bg-slate-950 p-2.5 rounded-lg border border-slate-800 font-mono">
-                          <div>📜 B/L or AWB: <span class="text-amber-300">{s.docs.blAwb}</span></div>
-                          <div>🧾 Invoice: <span class="text-slate-300">{s.docs.invoice}</span></div>
-                          <div>📦 Packing List: <span class="text-slate-300">{s.docs.packingList}</span></div>
-                          <div>🌍 Origin Cert: <span class="text-slate-300">{s.docs.originCert}</span></div>
-                        </div>
-                        <div class="flex justify-between items-center text-[10px] text-slate-400 pt-1">
-                          <span>Duty/Tariff Payment: <strong class="text-emerald-400">{s.dutyStatus}</strong></span>
-                          <span>ETA: <strong class="text-slate-200">{s.eta}</strong></span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* TAB 4: NEW DISPATCH FORM */}
-              {activeTab === 'new' && (
-                <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 space-y-4">
-                  <div>
-                    <h2 class="text-sm font-bold text-amber-400 flex items-center gap-2">
-                      🌐 {t.newShipmentTitle}
-                    </h2>
-                    <p class="text-[11px] text-slate-400 mt-0.5">{t.newShipmentSubtitle}</p>
-                  </div>
-
-                  <form onSubmit={handleFormSubmit} class="space-y-3 text-xs">
-                    <div>
-                      <label class="block text-slate-400 mb-1 font-semibold">{t.mode}</label>
-                      <select 
-                        value={formData.mode}
-                        onChange={(e) => setFormData({ ...formData, mode: e.target.value })}
-                        class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-amber-300 focus:outline-none focus:border-amber-400 font-bold"
-                      >
-                        <option value="Road">🚛 Road Transit (Cross-Border Trucking)</option>
-                        <option value="Ocean">🚢 Ocean Freight (Sea Shipping)</option>
-                        <option value="Air">✈️ Air Freight (Express Air Cargo)</option>
-                      </select>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-2">
-                      <div>
-                        <label class="block text-slate-400 mb-1 font-semibold">{t.carrier}</label>
-                        <input 
-                          type="text" 
-                          required
-                          placeholder="e.g., Maersk / BAFS"
-                          value={formData.carrier}
-                          onChange={(e) => setFormData({ ...formData, carrier: e.target.value })}
-                          class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-white focus:outline-none focus:border-amber-400"
-                        />
-                      </div>
-                      <div>
-                        <label class="block text-slate-400 mb-1 font-semibold">{t.vesselFlight}</label>
-                        <input 
-                          type="text" 
-                          placeholder="Vessel name / Truck plate"
-                          value={formData.vesselFlight}
-                          onChange={(e) => setFormData({ ...formData, vesselFlight: e.target.value })}
-                          class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-white focus:outline-none focus:border-amber-400"
-                        />
-                      </div>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-2">
-                      <div>
-                        <label class="block text-slate-400 mb-1 font-semibold">{t.origin}</label>
-                        <input 
-                          type="text" 
-                          required
-                          placeholder="Port/City & Country"
-                          value={formData.origin}
-                          onChange={(e) => setFormData({ ...formData, origin: e.target.value })}
-                          class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-white focus:outline-none focus:border-amber-400"
-                        />
-                      </div>
-                      <div>
-                        <label class="block text-slate-400 mb-1 font-semibold">{t.destination}</label>
-                        <input 
-                          type="text" 
-                          required
-                          placeholder="Port/City & Country"
-                          value={formData.destination}
-                          onChange={(e) => setFormData({ ...formData, destination: e.target.value })}
-                          class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-white focus:outline-none focus:border-amber-400"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label class="block text-slate-400 mb-1 font-semibold">{t.cargoDesc}</label>
-                      <input 
-                        type="text" 
-                        required
-                        placeholder="Description of imported/exported goods"
-                        value={formData.cargoDescription}
-                        onChange={(e) => setFormData({ ...formData, cargoDescription: e.target.value })}
-                        class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-white focus:outline-none focus:border-amber-400"
-                      />
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-2">
-                      <div>
-                        <label class="block text-slate-400 mb-1 font-semibold">{t.weightVol}</label>
-                        <input 
-                          type="text" 
-                          placeholder="e.g. 24 Tons / 40ft HQ"
-                          value={formData.weightVolume}
-                          onChange={(e) => setFormData({ ...formData, weightVolume: e.target.value })}
-                          class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-white focus:outline-none focus:border-amber-400"
-                        />
-                      </div>
-                      <div>
-                        <label class="block text-slate-400 mb-1 font-semibold">{t.blAwbNo}</label>
-                        <input 
-                          type="text" 
-                          placeholder="Bill of Lading / AWB No."
-                          value={formData.blAwb}
-                          onChange={(e) => setFormData({ ...formData, blAwb: e.target.value })}
-                          class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-white focus:outline-none focus:border-amber-400"
-                        />
-                      </div>
-                    </div>
-
-                    <button 
-                      type="submit"
-                      class="w-full py-3 bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold rounded-xl shadow-lg transition mt-2 text-xs uppercase tracking-wider"
-                    >
-                      🚀 {t.submitBtn}
-                    </button>
-                  </form>
-                </div>
-              )}
-
+        {/* Dashboard Content */}
+        <main className="flex-1 p-6 space-y-6 overflow-y-auto">
+          {/* Top Metrics Bar */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="bg-slate-800 border border-slate-700 p-4 rounded-xl">
+              <p className="text-xs text-slate-400 font-medium">Active Transit Trucks</p>
+              <p className="text-2xl font-bold mt-1 text-white">142 Units</p>
+              <span className="text-xs text-emerald-400 mt-2 inline-block">89% on corridor route</span>
+            </div>
+            <div className="bg-slate-800 border border-slate-700 p-4 rounded-xl">
+              <p className="text-xs text-slate-400 font-medium">Cargo Volume (Tons)</p>
+              <p className="text-2xl font-bold mt-1 text-white">4,250 MT</p>
+              <span className="text-xs text-blue-400 mt-2 inline-block">Djibouti ➔ Mojo Corridor</span>
+            </div>
+            <div className="bg-slate-800 border border-slate-700 p-4 rounded-xl">
+              <p className="text-xs text-slate-400 font-medium">BAFS Pending Settlement</p>
+              <p className="text-2xl font-bold mt-1 text-amber-400">{totalDisbursement.toLocaleString('en-US', { minimumFractionDigits: 2 })} ETB</p>
+              <span className="text-xs text-slate-400 mt-2 inline-block">10 Disburse Items queued</span>
+            </div>
+            <div className="bg-slate-800 border border-slate-700 p-4 rounded-xl">
+              <p className="text-xs text-slate-400 font-medium">Customs Clearance Compliance</p>
+              <p className="text-2xl font-bold mt-1 text-emerald-400">98.4%</p>
+              <span className="text-xs text-emerald-400 mt-2 inline-block">Asycuda World Synced</span>
             </div>
           </div>
 
-          {/* Details Modal */}
-          {selectedShipment && (
-            <div class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-              <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 max-w-sm w-full space-y-4 shadow-2xl text-xs">
-                <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-                  <div>
-                    <span class="text-amber-400 font-mono font-bold">{selectedShipment.id}</span>
-                    <h3 class="text-sm font-bold text-white mt-0.5">{selectedShipment.cargoDescription}</h3>
+          {activeTab === 'corridor' && (
+            <div className="space-y-6">
+              <div className="bg-slate-800 border border-slate-700 rounded-xl p-5">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-lg font-semibold flex items-center gap-2">
+                    <MapPin className="text-blue-400 h-5 w-5" />
+                    Live Djibouti - Addis Ababa Corridor Monitor
+                  </h2>
+                  <div className="relative">
+                    <Search className="h-4 w-4 absolute left-3 top-2.5 text-slate-500" />
+                    <input 
+                      type="text" 
+                      placeholder="Search Waybill or Truck..." 
+                      className="bg-slate-900 border border-slate-700 rounded-lg pl-9 pr-4 py-1.5 text-sm focus:outline-none focus:border-blue-500 text-slate-200"
+                    />
                   </div>
-                  <button onClick={() => setSelectedShipment(null)} class="text-slate-400 text-base font-bold">✕</button>
                 </div>
 
-                <div class="space-y-2 text-slate-300">
-                  <p>🌐 <strong>Mode:</strong> {selectedShipment.mode}</p>
-                  <p>🛳️ <strong>Carrier:</strong> {selectedShipment.carrier} ({selectedShipment.vesselFlight})</p>
-                  <p>🗺️ <strong>Route:</strong> {selectedShipment.origin} ➔ {selectedShipment.destination}</p>
-                  <p>🏢 <strong>Consignee:</strong> {selectedShipment.consignee}</p>
-                  <p>⚖️ <strong>Specs:</strong> {selectedShipment.weightVolume}</p>
-                  <p>📜 <strong>B/L or AWB:</strong> <span class="font-mono text-amber-300">{selectedShipment.docs.blAwb}</span></p>
-                  <p>🛃 <strong>Customs Status:</strong> {selectedShipment.customsStatus}</p>
-                  <p>💰 <strong>Duty Status:</strong> {selectedShipment.dutyStatus}</p>
-                  <p>📅 <strong>Estimated Arrival (ETA):</strong> {selectedShipment.eta}</p>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm text-slate-300">
+                    <thead className="bg-slate-900/60 text-slate-400 uppercase text-xs">
+                      <tr>
+                        <th className="p-3">Waybill #</th>
+                        <th className="p-3">Driver / Plate</th>
+                        <th className="p-3">Cargo Description</th>
+                        <th className="p-3">Route Segment</th>
+                        <th className="p-3">Current Checkpoint</th>
+                        <th className="p-3">Status</th>
+                        <th className="p-3">ETA (Addis/Mojo)</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-700">
+                      {shipments.map((item) => (
+                        <tr key={item.id} className="hover:bg-slate-700/30 transition">
+                          <td className="p-3 font-mono font-medium text-blue-400">{item.id}</td>
+                          <td className="p-3">
+                            <div>{item.driver}</div>
+                            <div className="text-xs text-slate-500">{item.vehicle}</div>
+                          </td>
+                          <td className="p-3">{item.cargo}</td>
+                          <td className="p-3 text-xs">{item.origin} ➔ {item.dest}</td>
+                          <td className="p-3 font-medium text-amber-300">{item.checkpoint}</td>
+                          <td className="p-3">
+                            <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
+                              item.status === 'On Schedule' || item.status === 'In Transit' 
+                                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+                                : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                            }`}>
+                              {item.status}
+                            </span>
+                          </td>
+                          <td className="p-3 text-xs text-slate-400">{item.eta}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
-
-                <button 
-                  onClick={() => setSelectedShipment(null)}
-                  class="w-full py-2.5 bg-slate-800 text-slate-200 font-bold rounded-xl border border-slate-700"
-                >
-                  Close Details
-                </button>
               </div>
             </div>
           )}
 
-          {/* Navigation Bar */}
-          <div class="fixed bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur border-t border-slate-800 max-w-md mx-auto flex justify-around p-2 text-xs z-30">
-            <button 
-              onClick={() => setActiveTab('dashboard')}
-              class={`flex-1 py-2 flex flex-col items-center font-bold rounded-xl transition ${activeTab === 'dashboard' ? 'text-amber-400 bg-slate-800/80' : 'text-slate-400 hover:text-slate-200'}`}
-            >
-              📊 <span>{t.dash}</span>
-            </button>
-            <button 
-              onClick={() => setActiveTab('shipments')}
-              class={`flex-1 py-2 flex flex-col items-center font-bold rounded-xl transition ${activeTab === 'shipments' ? 'text-amber-400 bg-slate-800/80' : 'text-slate-400 hover:text-slate-200'}`}
-            >
-              🌐 <span>{t.shipments}</span>
-            </button>
-            <button 
-              onClick={() => setActiveTab('customs')}
-              class={`flex-1 py-2 flex flex-col items-center font-bold rounded-xl transition ${activeTab === 'customs' ? 'text-amber-400 bg-slate-800/80' : 'text-slate-400 hover:text-slate-200'}`}
-            >
-              🛃 <span>{t.customs}</span>
-            </button>
-            <button 
-              onClick={() => setActiveTab('new')}
-              class={`flex-1 py-2 flex flex-col items-center font-bold rounded-xl transition ${activeTab === 'new' ? 'text-amber-400 bg-slate-800/80' : 'text-slate-400 hover:text-slate-200'}`}
-            >
-              ➕ <span>{t.newDispatch}</span>
-            </button>
-          </div>
-        </div>
-      );
-    }
+          {activeTab === 'bulk-bafs' && (
+            <div className="space-y-6">
+              <div className="bg-slate-800 border border-slate-700 rounded-xl p-5">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                  <div>
+                    <h2 className="text-lg font-semibold flex items-center gap-2">
+                      <CreditCard className="text-emerald-400 h-5 w-5" />
+                      BAFS Ethiopian Bank Bulk Payment Module
+                    </h2>
+                    <p className="text-xs text-slate-400 mt-1">
+                      Automated disbursement engine formatted for Commercial Bank of Ethiopia (CBE) bulk transfer files.
+                    </p>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <button className="bg-slate-700 hover:bg-slate-600 text-slate-200 px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition">
+                      <Download className="h-4 w-4" />
+                      Export .XLSX Template
+                    </button>
+                    <button className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition shadow-lg shadow-blue-600/30">
+                      <ShieldCheck className="h-4 w-4" />
+                      Execute CBE Batch Transfer
+                    </button>
+                  </div>
+                </div>
 
-    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
-  </script>
-</body>
-</html>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm text-slate-300">
+                    <thead className="bg-slate-900/60 text-slate-400 uppercase text-xs">
+                      <tr>
+                        <th className="p-3">Row</th>
+                        <th className="p-3">Credit Account (CBE / Bank)</th>
+                        <th className="p-3">Beneficiary Name / Description</th>
+                        <th className="p-3 text-right">Amount (ETB)</th>
+                        <th className="p-3 text-center">Validation Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-700">
+                      {bulkPayments.map((pay, idx) => (
+                        <tr key={idx} className="hover:bg-slate-700/30 transition font-mono">
+                          <td className="p-3 text-slate-500 text-xs">{idx + 1}</td>
+                          <td className="p-3 text-blue-300">{pay.creditAccount}</td>
+                          <td className="p-3 text-slate-200 font-sans">{pay.recipient}</td>
+                          <td className="p-3 text-right font-semibold text-emerald-400">
+                            {pay.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })} ETB
+                          </td>
+                          <td className="p-3 text-center font-sans">
+                            <span className="inline-flex items-center gap-1 text-xs text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
+                              <CheckCircle2 className="h-3 w-3" />
+                              {pay.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+        </main>
+      </div>
+    </div>
+  );
+}
